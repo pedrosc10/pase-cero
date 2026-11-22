@@ -300,601 +300,6 @@
   background: radial-gradient(ellipse 100% 100% at 100% 100%, var(--carbon) 0 34%, #1d0b04 40%, #6a2608 45%, rgba(255, 140, 40, 0.85) 49%, rgba(255, 190, 110, 0.35) 53%, rgba(120, 80, 40, 0.18) 60%, rgba(236, 226, 207, 0) 68%);
 }
 
-/* ───────────── Pase 0 ───────────── */
-.p0-intro {
-  margin: clamp(10px, 2.4cqh, 22px) 0 0;
-}
-
-.p0-intro .ln {
-  margin: 0;
-  font-weight: 300;
-  font-size: clamp(30px, 9.2cqw, 40px);
-  line-height: 1.04;
-}
-
-.p0-intro .ln:last-child {
-  font-style: italic;
-  color: var(--hueso-2);
-}
-
-.p0-zona {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.p0-antes,
-.ficha {
-  margin: auto 0;
-}
-
-.p0-carne {
-  display: block;
-  width: 96%;
-  max-height: 34cqh;
-  margin: 0 auto;
-  overflow: visible;
-}
-
-.p0-peticion {
-  margin: 12px 0 0;
-  text-align: center;
-  font-size: 19px;
-  color: var(--hueso-2);
-}
-
-.ficha {
-  padding: 12px 16px 14px;
-  transform: rotate(0.8deg);
-}
-
-.ficha-h {
-  display: flex;
-  justify-content: space-between;
-  font-family: var(--sc);
-  font-weight: 600;
-  font-size: 14px;
-  letter-spacing: 0.2em;
-  border-bottom: 1px solid var(--tinta);
-  padding-bottom: 6px;
-}
-
-.ficha dl {
-  margin: 0;
-}
-
-.fila {
-  display: grid;
-  grid-template-columns: 74px 1fr;
-  gap: 10px;
-  padding: clamp(4px, 0.9cqh, 8px) 0;
-  border-bottom: 1px dotted rgba(28, 22, 17, 0.3);
-}
-
-.fila dt {
-  font-family: var(--sc);
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  font-size: 15px;
-  color: var(--carne);
-}
-
-.fila dd {
-  margin: 0;
-  font-style: italic;
-  font-size: 17px;
-  line-height: 1.18;
-}
-
-.ficha-veredicto {
-  margin: 12px 0 0;
-  text-align: center;
-  font-family: var(--grot);
-  text-transform: uppercase;
-  font-size: 23px;
-  letter-spacing: 0.02em;
-}
-
-.ficha-veredicto em {
-  font-style: normal;
-  color: var(--carne);
-}
-
-.pie .remate {
-  margin: 0 0 8px;
-  text-align: center;
-}
-
-/* ───────────── Pase I · Rascar ───────────── */
-.p1-instr {
-  margin: clamp(12px, 2.8cqh, 24px) 0 10px;
-}
-
-.rascar {
-  position: relative;
-  flex: 1;
-  min-height: 210px;
-  max-height: 46cqh;
-  touch-action: none;
-  border: 1px solid rgba(239, 230, 214, 0.14);
-  user-select: none;
-  -webkit-user-select: none;
-}
-
-.rascar-txt {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: 18px 20px;
-  background: radial-gradient(120% 80% at 50% 110%, rgba(255, 122, 26, 0.2), transparent 60%), var(--carbon-2);
-}
-
-.rascar-txt .l {
-  margin: 0 0 4px;
-  font-weight: 300;
-  font-size: clamp(25px, 7.6cqw, 33px);
-  line-height: 1.1;
-}
-
-.l-fuego {
-  margin: 10px 0 0;
-  font-size: clamp(46px, 15cqw, 66px);
-  transform-origin: 0 50%;
-}
-
-.rascar-cv {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  touch-action: none;
-  cursor: crosshair;
-}
-
-/* ───────────── Pase II · Humo ───────────── */
-.humo-zona {
-  position: relative;
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.humo-txt {
-  position: relative;
-  width: 100%;
-  margin: auto 0;
-  padding-top: 8px;
-}
-
-.humo-txt .l {
-  margin: 0 0 4px;
-  font-weight: 300;
-  font-size: clamp(30px, 9cqw, 40px);
-  line-height: 1.05;
-}
-
-.humo-txt .l-fuego {
-  font-size: clamp(42px, 13.5cqw, 60px);
-}
-
-.humo-capa {
-  position: absolute;
-  inset: -12% -30%;
-  pointer-events: none;
-}
-
-.humo-capa i {
-  position: absolute;
-  width: 72%;
-  aspect-ratio: 1;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(128, 118, 108, 0.62), rgba(84, 76, 68, 0.32) 42%, transparent 70%);
-  will-change: transform;
-}
-
-.humo-capa i:nth-child(1) { left: 0; top: 0; }
-.humo-capa i:nth-child(2) { left: 30%; top: 10%; }
-.humo-capa i:nth-child(3) { left: 12%; top: 34%; }
-.humo-capa i:nth-child(4) { left: 46%; top: 38%; }
-.humo-capa i:nth-child(5) { left: 22%; top: 60%; width: 60%; }
-
-.brasero {
-  position: relative;
-  display: block;
-  width: 100%;
-  height: clamp(90px, 15cqh, 128px);
-  margin-top: 10px;
-  touch-action: none;
-  user-select: none;
-  -webkit-user-select: none;
-  -webkit-touch-callout: none;
-}
-
-.brasas {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  width: 100%;
-  height: auto;
-}
-
-.carbon-vivo {
-  opacity: 0.15;
-}
-
-.brasero-luz {
-  position: absolute;
-  left: 6%;
-  right: 6%;
-  bottom: 0;
-  height: 140%;
-  background: radial-gradient(ellipse 60% 70% at 50% 95%, rgba(255, 150, 50, 0.75), rgba(255, 90, 10, 0.25) 45%, transparent 72%);
-  opacity: 0;
-  transform-origin: 50% 100%;
-  will-change: transform, opacity;
-}
-
-.brasero-medidor {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -10px;
-  height: 2px;
-  background: rgba(239, 230, 214, 0.12);
-}
-
-.brasero-medidor i {
-  display: block;
-  height: 100%;
-  background: linear-gradient(90deg, var(--ascua-deep), var(--ascua-hot));
-  transform-origin: 0 50%;
-  transform: scaleX(0);
-}
-
-.brasero.pulsando .brasero-medidor {
-  background: rgba(255, 122, 26, 0.2);
-}
-
-.p2-instr {
-  margin-top: 22px;
-}
-
-/* ───────────── Pase III · Añada ───────────── */
-.p3-intro {
-  margin: clamp(8px, 2cqh, 16px) 0 0;
-  font-size: 19px;
-  color: var(--hueso-2);
-}
-
-.p3-q {
-  margin: 2px 0 clamp(8px, 2cqh, 18px);
-  font-weight: 400;
-  font-size: clamp(26px, 7.8cqw, 33px);
-  line-height: 1.08;
-}
-
-.anio {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
-}
-
-.dig {
-  position: relative;
-  height: clamp(60px, 10.5cqh, 86px);
-  display: grid;
-  place-items: center;
-  border-bottom: 2px solid rgba(239, 230, 214, 0.32);
-  font-family: var(--grot);
-  font-size: clamp(46px, 14cqw, 64px);
-  line-height: 1;
-  overflow: hidden;
-  transition: color 0.4s, border-color 0.4s;
-}
-
-.dig b {
-  font-weight: 400;
-  display: inline-block;
-}
-
-.dig.cursor::after {
-  content: '';
-  position: absolute;
-  bottom: 12px;
-  left: 50%;
-  width: 2px;
-  height: 48%;
-  background: var(--ascua);
-  animation: parpadeo 1s steps(2) infinite;
-}
-
-@keyframes parpadeo {
-  50% {
-    opacity: 0;
-  }
-}
-
-.dig.arde {
-  color: var(--ascua-hot);
-  border-color: var(--ascua);
-  text-shadow: 0 0 22px rgba(255, 122, 26, 0.75);
-}
-
-.p3-msg {
-  min-height: 1.3em;
-  margin: 10px 0 0;
-  font-style: italic;
-  font-size: 19px;
-  line-height: 1.2;
-}
-
-.p3-pista {
-  min-height: 1.2em;
-  margin: 2px 0 0;
-  font-family: var(--mono);
-  font-size: 13px;
-  color: var(--ascua-hot);
-}
-
-.teclado {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  margin-top: auto;
-  border-top: var(--hair);
-  border-left: var(--hair);
-}
-
-.tecla {
-  height: clamp(46px, 7.4cqh, 60px);
-  border-right: var(--hair);
-  border-bottom: var(--hair);
-  font-family: var(--mono);
-  font-size: 22px;
-  color: var(--hueso);
-  display: grid;
-  place-items: center;
-  touch-action: manipulation;
-  user-select: none;
-  -webkit-user-select: none;
-}
-
-.tecla.golpe {
-  animation: golpe 0.35s ease-out;
-}
-
-@keyframes golpe {
-  0% {
-    background: rgba(255, 122, 26, 0.32);
-  }
-  100% {
-    background: rgba(255, 122, 26, 0);
-  }
-}
-
-.tecla-fn {
-  color: var(--hueso-dim);
-}
-
-.tecla-ok {
-  font-family: var(--grot);
-  font-size: 20px;
-  letter-spacing: 0.08em;
-  color: var(--ascua-hot);
-}
-
-.scene-pase3 .pie {
-  margin-top: 8px;
-  min-height: 0;
-}
-
-.p3-acierto {
-  text-align: center;
-}
-
-.p3-ok {
-  margin: 18px 0 0;
-  font-family: var(--grot);
-  text-transform: uppercase;
-  font-size: 40px;
-  line-height: 1;
-  color: var(--ascua-hot);
-  text-shadow: 0 0 24px rgba(255, 122, 26, 0.6);
-}
-
-.p3-acierto .remate {
-  margin: 4px 0 10px;
-}
-
-/* ───────────── Pase IV · Combate ───────────── */
-.p4-intro {
-  margin: clamp(8px, 2cqh, 16px) 0 4px;
-  font-weight: 300;
-  font-size: clamp(25px, 7.4cqw, 31px);
-  line-height: 1.1;
-}
-
-.ring {
-  position: relative;
-  flex: none;
-  margin: auto 0;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 6px 0;
-}
-
-.ring .esquina.roja {
-  margin-top: auto;
-}
-
-.ring .esquina.ascuas {
-  margin-bottom: auto;
-}
-
-.cuerdas {
-  position: absolute;
-  top: 10%;
-  bottom: 10%;
-  left: -24px;
-  right: -24px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  pointer-events: none;
-}
-
-.cuerdas i {
-  height: 2px;
-  background: linear-gradient(90deg, transparent, var(--carne) 12%, #a9483f 50%, var(--carne) 88%, transparent);
-  opacity: 0.75;
-}
-
-.esquina {
-  position: relative;
-  z-index: 1;
-  display: grid;
-  justify-items: start;
-  text-align: left;
-  padding: 10px 14px 12px;
-  border: 1px solid var(--carne);
-  background: linear-gradient(135deg, rgba(140, 58, 51, 0.38), rgba(11, 9, 7, 0.94) 70%);
-  transition: opacity 0.6s, border-color 0.4s;
-  touch-action: manipulation;
-}
-
-.esquina.roja {
-  margin-right: 12%;
-}
-
-.esquina.ascuas {
-  margin-left: 12%;
-  justify-items: end;
-  text-align: right;
-  border-color: rgba(255, 122, 26, 0.55);
-  background: linear-gradient(225deg, rgba(255, 122, 26, 0.16), rgba(11, 9, 7, 0.94) 70%);
-}
-
-.esquina .et {
-  font-family: var(--sc);
-  letter-spacing: 0.2em;
-  font-size: 13px;
-  color: var(--hueso-dim);
-}
-
-.esquina .nom {
-  font-size: clamp(34px, 10.4cqw, 46px);
-  margin: 2px 0 4px;
-  color: var(--hueso);
-}
-
-.esquina.ascuas .nom {
-  color: var(--ascua-hot);
-  text-shadow: 0 0 22px rgba(255, 122, 26, 0.6);
-  letter-spacing: 0.08em;
-}
-
-.esquina .estado {
-  font-family: var(--mono);
-  font-size: 13px;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--hueso-2);
-}
-
-.sello-esq {
-  border: 1.5px solid var(--hueso-2);
-  padding: 2px 8px;
-  transform: rotate(-4deg);
-}
-
-.esquina.ascuas.pista {
-  animation: latido 1.1s ease-in-out infinite;
-}
-
-@keyframes latido {
-  0%,
-  100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.035);
-  }
-}
-
-.esquina.ascuas.ganadora {
-  border-color: var(--ascua-hot);
-  background: linear-gradient(225deg, rgba(255, 122, 26, 0.4), rgba(11, 9, 7, 0.9) 75%);
-}
-
-.esquina.roja.apagada {
-  opacity: 0.4;
-}
-
-.vs {
-  position: relative;
-  z-index: 1;
-  text-align: center;
-  font-style: italic;
-  font-weight: 300;
-  font-size: 24px;
-  color: var(--hueso-dim);
-}
-
-.p4-q {
-  margin: 12px 0 0;
-  text-align: center;
-  font-style: italic;
-  font-size: 20px;
-}
-
-.p4-msg {
-  min-height: 1.3em;
-  margin: 4px 0 0;
-  text-align: center;
-  font-size: 17px;
-  color: var(--hueso-2);
-}
-
-.scene-pase4 .pie {
-  margin-top: 0;
-}
-
-.p4-acierto {
-  text-align: center;
-}
-
-.p4-ok {
-  margin: 0;
-}
-
-.p4-ok span {
-  display: inline;
-}
-
-.p4-ok span:first-child {
-  font-family: var(--grot);
-  text-transform: uppercase;
-  font-size: 30px;
-  line-height: 1;
-  color: var(--ascua-hot);
-  margin-right: 6px;
-}
-
-.p4-ok span:last-child {
-  font-style: italic;
-  font-size: 22px;
-}
-
-.p4-acierto .remate {
-  margin: 4px 0 10px;
-}
-
 /* ───────────── El Jardín ───────────── */
 body.modo-oro #glow {
   background: radial-gradient(closest-side, rgba(207, 163, 94, 0.26), rgba(143, 103, 48, 0.1) 55%, transparent 100%);
@@ -1035,62 +440,6 @@ body.modo-oro #glow {
   height: 100%;
   background: var(--oro);
   transform-origin: 0 50%;
-}
-
-/* ───────────── En voz alta ───────────── */
-.va-aviso {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 0;
-  font-family: var(--sc);
-  font-weight: 600;
-  font-size: 15px;
-  letter-spacing: 0.14em;
-  color: var(--ascua-hot);
-  text-wrap: balance;
-}
-
-.va-punto {
-  flex: none;
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: var(--ascua);
-  box-shadow: 0 0 10px var(--ascua);
-  animation: parpadeo 1.2s steps(2) infinite;
-}
-
-.va-pag {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-  outline: none;
-  touch-action: manipulation;
-  user-select: none;
-  -webkit-user-select: none;
-}
-
-.va-txt {
-  margin: 0;
-  width: 100%;
-  font-family: var(--grot);
-  text-transform: uppercase;
-  font-size: clamp(54px, 17.5cqw, 92px);
-  line-height: 0.94;
-  letter-spacing: 0.005em;
-  color: var(--hueso);
-  transform-origin: 0 50%;
-}
-
-.va-hint {
-  margin: 0;
-  font-family: var(--sc);
-  letter-spacing: 0.18em;
-  font-size: 14px;
-  color: var(--hueso-dim);
 }
 
 /* ───────────── Revelación ───────────── */
@@ -1479,29 +828,9 @@ html.reduced .scene-revelacion.respira .rn-brillo {
     padding-top: calc(env(safe-area-inset-top, 0px) + 50px);
     padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
   }
-  .pase-num { font-size: 60px; }
-  .pase-meta .t { font-size: 23px; }
-  .pase-head { margin-bottom: 8px; }
-  .p0-intro .ln { font-size: 27px; }
-  .fila { padding: 2px 0; }
-  .fila dd { font-size: 15px; }
-  .ficha { padding: 8px 12px 10px; }
-  .ficha-veredicto { font-size: 18px; margin-top: 6px; }
-  .p3-intro { font-size: 16px; }
-  .p3-q { font-size: 23px; }
-  .dig { height: 50px; font-size: 42px; }
-  .p3-msg { font-size: 16px; margin-top: 6px; }
-  .tecla { height: 40px; }
-  .p4-intro { font-size: 21px; margin-top: 6px; }
-  .esquina { padding: 7px 12px 8px; }
-  .esquina .nom { font-size: 30px; }
-  .vs { font-size: 17px; }
-  .p4-q { font-size: 17px; margin-top: 6px; }
-  .p4-ok span:last-child { font-size: 18px; }
-  .rascar { min-height: 180px; }
-  .humo-txt .l { font-size: 27px; }
   .j-l { font-size: 20px; }
   .lv-texto { font-size: 60px; }
+  .cr-golpe { font-size: 15cqw; }
   .btn { min-height: 46px; }
 }
 
@@ -1629,17 +958,6 @@ body.pausado #historias {
   background: radial-gradient(circle, var(--carbon) 0 60%, #1d0b04 63%, #6a2608 65.5%, rgba(255, 140, 40, 0.95) 67.5%, rgba(255, 200, 120, 0.5) 68.6%, rgba(120, 80, 40, 0.15) 70%, transparent 71%);
 }
 
-/* Letras que arden (transición) */
-.scene.arde h1,
-.scene.arde p,
-.scene.arde .nom,
-.scene.arde .pase-num {
-  color: var(--ascua-hot) !important;
-  -webkit-text-stroke-color: var(--ascua-hot);
-  text-shadow: 0 0 14px rgba(255, 122, 26, 0.9), 0 -6px 20px rgba(255, 90, 10, 0.5);
-  transition: color 0.15s, text-shadow 0.15s;
-}
-
 /* Frente dorado (tras El Jardín) */
 #curtain.oro::before {
   background: linear-gradient(to top, var(--carbon) 0%, #2a1c08 30%, var(--oro-sombra) 55%, var(--oro-claro) 82%, rgba(255, 246, 214, 0) 100%);
@@ -1649,39 +967,10 @@ body.pausado #historias {
   background: linear-gradient(to bottom, var(--carbon) 0%, #2a1c08 30%, var(--oro-sombra) 55%, var(--oro-claro) 82%, rgba(255, 246, 214, 0) 100%);
 }
 
-/* Pases automáticos: ajustes */
-.scene-pase1 .rascar {
-  margin-top: clamp(10px, 2.4cqh, 22px);
-}
-
-.contador .dig b {
-  font-variant-numeric: tabular-nums;
-}
-
-.scene-pase3 .p3-msg {
-  text-align: left;
-  min-height: 2.6em;
-}
-
-.p3-pie {
-  margin-top: auto;
-}
-
-.p3-acierto .p3-ok {
-  margin: 0;
-}
-
-.p4-pie {
-  text-align: center;
-}
-
-.p4-ok {
-  margin: 0 0 4px;
-}
-
 /* Revelación: placa de ceniza (interacción 2) */
 .rev-placa {
   position: relative;
+  overflow: hidden;
   width: 100%;
   padding: 18px 8px 16px;
   touch-action: none;
@@ -1733,4 +1022,157 @@ body.pausado #historias {
 
 .scene-revelacion {
   padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 40px);
+}
+
+/* ───────────── Su carrera (tipografía cinética) ───────────── */
+.scene-carrera {
+  justify-content: center;
+}
+
+.cr-k {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 0px) + 40px);
+  left: 24px;
+  margin: 0;
+  color: var(--ascua-hot);
+}
+
+.cr-escenario {
+  position: relative;
+  width: 100%;
+  min-height: 60cqh;
+  display: grid;
+  place-items: center;
+}
+
+.cr-escenario > * {
+  grid-area: 1 / 1;
+  margin: 0;
+  width: 100%;
+}
+
+.cr-golpe {
+  text-align: center;
+  line-height: 1;
+  padding: 0.12em 0;
+  will-change: transform;
+}
+
+.cr-serif {
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 300;
+  font-size: clamp(56px, 18cqw, 88px);
+  letter-spacing: -0.02em;
+  line-height: 0.95;
+}
+
+.cr-grot {
+  font-family: var(--grot);
+  text-transform: uppercase;
+  font-size: clamp(64px, 21cqw, 104px);
+  letter-spacing: 0.005em;
+  line-height: 1.02;
+}
+
+.cr-ascua {
+  background: linear-gradient(180deg, #fff3d6 0%, #ffc46b 32%, #ff8a2a 64%, #c2410c 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.cr-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cr-lista span {
+  display: block;
+  font-family: var(--grot);
+  text-transform: uppercase;
+  font-size: clamp(34px, 11cqw, 52px);
+  line-height: 1;
+  color: var(--hueso);
+}
+
+.cr-lista span:first-child {
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 300;
+  text-transform: none;
+  font-size: clamp(32px, 10cqw, 46px);
+}
+
+.cr-lista span:last-child {
+  color: var(--ascua-hot);
+}
+
+.cr-giro {
+  text-align: left;
+}
+
+.cr-giro p {
+  margin: 0;
+}
+
+.cr-giro-1 {
+  font-family: var(--serif);
+  font-weight: 300;
+  font-size: clamp(34px, 10.5cqw, 46px);
+  line-height: 1.05;
+  color: var(--hueso);
+}
+
+.cr-giro-2 {
+  margin-top: 10px !important;
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 300;
+  font-size: clamp(34px, 10.5cqw, 46px);
+  line-height: 1.1;
+  color: var(--hueso-2);
+}
+
+.cr-giro-2 .hot {
+  font-family: var(--grot);
+  font-style: normal;
+  text-transform: uppercase;
+  font-size: 1.25em;
+  letter-spacing: 0.02em;
+  transform-origin: 50% 60%;
+}
+
+/* Revelación: momento de grupo y tensión */
+.rev-preparados {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  margin: 0;
+  display: grid;
+  place-items: center;
+  padding: 0 20px;
+  text-align: center;
+  font-family: var(--grot);
+  text-transform: uppercase;
+  font-size: clamp(56px, 19cqw, 96px);
+  line-height: 0.92;
+  color: var(--hueso);
+  pointer-events: none;
+  visibility: hidden;
+}
+
+#stage.tension #vignette {
+  animation: latido-vineta 0.95s ease-in-out infinite;
+}
+
+@keyframes latido-vineta {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  40% {
+    opacity: 0.55;
+  }
 }

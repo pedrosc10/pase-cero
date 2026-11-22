@@ -26,7 +26,7 @@
 const secreto = (b64: string) => ({ b64 }) as const
 export type Secreto = ReturnType<typeof secreto>
 
-export type Transicion = 'quemar' | 'humo' | 'corte' | 'chamuscar' | 'letras' | 'oro'
+export type Transicion = 'quemar' | 'humo' | 'corte' | 'chamuscar' | 'oro'
 
 export const config = {
   /** Nombres. */
@@ -40,35 +40,26 @@ export const config = {
 
   /**
    * ⏱  DURACIÓN DE CADA PANTALLA (segundos).
-   * Calculadas con: ~2,5 s de animación de entrada + el texto a ~3 palabras/s
-   * (lectura cómoda en voz baja). Súbelas o bájalas a tu gusto.
-   * La barra de arriba avanza con estos tiempos.
+   * Ritmo de tráiler: pantallas rápidas y una sola lenta (El Jardín),
+   * que es donde está la emoción. La barra de arriba avanza con estos
+   * tiempos. Súbelos o bájalos a tu gusto.
    */
   duraciones: {
-    sala: 10, // bienvenida + carta (≈25 palabras)
-    pase0: 16, // entrecot + ficha de cata que se escribe sola (≈50 palabras)
-    pase1: 10, // la ceniza se aparta sola (≈20 palabras)
-    pase2: 10, // el humo se abre y salen las pistas (≈16 palabras)
-    pase3: 12, // contador 2026 → 1972 (≈20 palabras)
-    pase4: 12, // cartel de combate (≈25 palabras)
-    jardin: 20, // líneas + el emblema se borda (≈25 palabras, ritmo pausado)
+    sala: 6, // bienvenida + carta (lectura rápida)
+    carrera: 10, // golpes de tipografía + el giro final
+    jardin: 20, // la pantalla lenta: líneas + el emblema se borda
     levanta: 5, // pausa obligatoria (la familia lleva el polar)
     /** Tras rascar la revelación, segundos hasta pasar al vale. */
-    revelacionTrasRascar: 7,
+    revelacionTrasRascar: 5,
   },
 
   /** Transición de SALIDA de cada pantalla hacia la siguiente. */
   transiciones: {
     entrada: 'quemar',
     sala: 'chamuscar',
-    pase0: 'humo',
-    pase1: 'corte',
-    pase2: 'humo',
-    pase3: 'corte',
-    pase4: 'letras',
+    carrera: 'humo', // de los golpes al aire del Jardín
     jardin: 'oro',
     levanta: 'corte',
-    vozAlta: 'corte',
     revelacion: 'quemar',
   } satisfies Record<string, Transicion>,
 
@@ -91,16 +82,15 @@ export const config = {
   sala: {
     antetitulo: 'Sala · Mesa uno',
     bienvenida: 'Bienvenido.',
-    linea: 'Esta noche el menú lo firma tu primo.',
+    linea: 'Hoy el menú lo firma tu primo.',
     carta: {
       titulo: 'Menú Degustación',
       subtitulo: 'Temporada de vuelta',
       pases: [
         { num: '0', nombre: 'Lo que tienes en la mano' },
-        { num: 'I', nombre: 'Hollín' },
-        { num: 'II', nombre: 'Humo' },
-        { num: 'III', nombre: 'Añada' },
-        { num: 'IV', nombre: 'El combate' },
+        { num: 'I', nombre: 'Hoja de servicios' },
+        { num: 'II', nombre: 'El Jardín' },
+        { num: 'III', nombre: 'Fuera de carta' },
       ],
       pie: [
         ['Cocina', 'Pedrito'],
@@ -110,65 +100,16 @@ export const config = {
     },
   },
 
-  // ── 2 · Pase 0 ──────────────────────────────────────────────
-  pase0: {
-    num: '0',
-    titulo: 'Lo que tienes en la mano',
-    intro: ['Sí. Eso.', 'El entrecot de la caja.'],
-    peticion: 'El sumiller procede a catarlo.',
-    ficha: [
-      ['Vista', 'Rojo intenso. Brillo de film transparente.'],
-      ['Nariz', 'Notas de nevera. Fondo de caja de cartón.'],
-      ['Boca', 'Todavía no. Ni se te ocurra.'],
-      ['Final', 'Largo. Larguísimo. Se entiende al final.'],
-      ['Crianza', 'En caja, delante de todos los primos.'],
-    ] as [string, string][],
-    veredicto: 'Diagnóstico: _le falta fuego._',
-    remate: 'A eso vamos.',
+  // ── 2 · Su carrera (tipografía cinética) ────────────────────
+  carrera: {
+    antetitulo: 'Hoja de servicios',
+    /** Un golpe por frase, al ritmo del sonido. */
+    golpes: ['Estrellas Michelin.', 'Dani García.', 'Ramón Freixa.'],
+    /** El giro, tras una pausa: cambio de ritmo y guasa. */
+    giro: ['Y todavía hay un sitio en Alcalá', 'donde *nunca* has comido.'],
   },
 
-  // ── 3 · Pase I · Hollín ─────────────────────────────────────
-  pase1: {
-    num: 'I',
-    titulo: 'Hollín',
-    oculto: ['Cinco años sirviendo estrellas.', 'Hoy descansas.', '*Hoy toca brasa.*'],
-    remate: 'Ni pinzas, ni espumas, ni esferas. Fuego y punto.',
-  },
-
-  // ── 4 · Pase II · Humo ──────────────────────────────────────
-  pase2: {
-    num: 'II',
-    titulo: 'Humo',
-    oculto: ['No está en Madrid.', 'Está en Alcalá.', '*En El Cercado.*'],
-    remate: 'Para llegar no hace falta AVE.',
-  },
-
-  // ── 5 · Pase III · Añada (contador) ─────────────────────────
-  pase3: {
-    num: 'III',
-    titulo: 'Añada',
-    intro: 'Un sumiller siempre pregunta la añada.',
-    pregunta: '¿Desde cuándo arde esta brasa?',
-    desde: 2026,
-    respuesta: 1972,
-    /** Aparece mientras el contador baja (remate bético). */
-    comentario: 'Más antiguo que tu primer Betis-Sevilla.',
-    acierto: ['Clavado.', 'Familia y brasa desde entonces.'],
-  },
-
-  // ── 6 · Pase IV · El combate (cartel) ───────────────────────
-  pase4: {
-    num: 'IV',
-    titulo: 'El combate',
-    intro: 'En Alcalá hay dos grandes.',
-    rival: secreto('TGEgUGVyZGlkYQ=='), // nombre del rincón ya conocido
-    esquinaConocida: { etiqueta: 'Esquina roja', estado: 'Conquistada' },
-    esquinaPendiente: { etiqueta: 'Esquina de ascuas', nombre: '???', estado: 'Visitas: 0' },
-    lineas: ['Una ya la tienes.', 'Te falta la otra.'],
-    remate: 'Hay que completar la colección.',
-  },
-
-  // ── 7 · Momento sincero · El Jardín ─────────────────────────
+  // ── 3 · Momento sincero · El Jardín ─────────────────────────
   jardin: {
     /** Líneas antes de que se borde el emblema. */
     lineas: ['Cinco años en Madrid.', 'Muchas estrellas.', 'Pero aquí, «casa» tiene otro nombre.'],
@@ -178,38 +119,26 @@ export const config = {
     alt: 'Emblema de El Jardín: cuatro casas con tejados en zigzag, dos palmeras y el nombre escrito a mano',
   },
 
-  // ── 7b · Levanta la vista (pausa automática) ────────────────
+  // ── 4 · Levanta la vista (pausa automática) ────────────────
   levanta: {
     /** Cámbialo a 'Ponte el tuyo.' si quieres. */
     texto: 'Levanta la vista.',
   },
 
-  // ── 8 · En voz alta ─────────────────────────────────────────
-  vozAlta: {
-    aviso: 'Ahora lee esto en voz alta para todos',
-    paginas: [
-      'Primos, silencio en la sala.',
-      'El sumiller va a anunciar el último pase.',
-      'No está en la carta.',
-      'Redoble, por favor.',
-    ],
-    /** Tiempo por página = base + segundos por palabra (lectura EN VOZ ALTA). */
-    segundosBase: 2,
-    segundosPorPalabra: 0.5,
-  },
-
-  // ── 9 · Revelación (interacción 2: rascar) ──────────────────
+  // ── 5 · Revelación (interacción 2: rascar) ──────────────────
   revelacion: {
-    antetitulo: 'Pase V · Fuera de carta',
+    antetitulo: 'Último pase · Fuera de carta',
+    /** Momento de grupo antes de la cuenta atrás. */
+    preparados: 'Primos: redoble.',
     instruccion: 'Rasca la ceniza',
     /** Solo aparece si en 20 s no ha rascado (para no atascarse nunca). */
     ayuda: 'Soplar la ceniza',
     linea1: secreto('VW5hIGNvbWlkYSBlbg=='),
     nombre: secreto('VmVudGEgRWwgQ2Fycml0bw=='),
-    pie: 'Desde 1972 · Alcalá de Guadaíra',
+    pie: 'Desde 1972',
   },
 
-  // ── 10 · Vale ───────────────────────────────────────────────
+  // ── 6 · Vale ───────────────────────────────────────────────
   vale: {
     cabecera: secreto('VmVudGEgRWwgQ2Fycml0bw=='),
     subcabecera: secreto('QXNhZG9yIGZhbWlsaWFy'), // + " · desde 1972"

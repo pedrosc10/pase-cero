@@ -255,7 +255,7 @@ export class Director {
       return
     }
     const prev = this.scenes[this.i]
-    let t: Transicion = prev?.out?.() ?? 'quemar'
+    const t: Transicion = prev?.out?.() ?? 'quemar'
     this.busy = true
     this.host.style.pointerEvents = 'none'
     const done = () => {
@@ -275,7 +275,6 @@ export class Director {
       })
       return
     }
-    if (t === 'letras' && !old.querySelector('h1, p, .nom')) t = 'corte'
     TRANSICIONES[t]({ old, swap, done, director: this })
   }
 
@@ -313,10 +312,13 @@ const TRANSICIONES: Record<Transicion, (a: TArgs) => void> = {
     director.audioRef.whoosh(true)
     gsap
       .timeline({ onComplete: done })
-      .to(old, { y: -26, opacity: 0, duration: 0.5, ease: 'power2.in' }, 0)
-      .fromTo(curtain, { yPercent: 110 }, { yPercent: 0, duration: 0.5, ease: 'power3.in' }, 0)
-      .add(swap)
-      .to(curtain, { yPercent: -112, duration: 0.6, ease: 'power3.out' })
+      .to(old, { y: -26, opacity: 0, duration: 0.32, ease: 'power2.in' }, 0)
+      .fromTo(curtain, { yPercent: 110 }, { yPercent: 0, duration: 0.32, ease: 'power3.in' }, 0)
+      .add(() => {
+        swap()
+        director.audioRef.thud(0.7)
+      })
+      .to(curtain, { yPercent: -112, duration: 0.42, ease: 'power3.out' })
   },
 
   /** Igual, pero el frente es hilo dorado (tras El Jardín). */
@@ -362,10 +364,10 @@ const TRANSICIONES: Record<Transicion, (a: TArgs) => void> = {
     gsap
       .timeline({ onComplete: done })
       .set(humoTelon, { visibility: 'visible' }, 0)
-      .fromTo(humoTelon, { xPercent: -130 }, { xPercent: 0, duration: 0.9, ease: 'power2.in' }, 0)
-      .to(old, { opacity: 0, x: 30, duration: 0.6, ease: 'power2.in' }, 0.2)
-      .add(swap, 0.9)
-      .to(humoTelon, { xPercent: 130, duration: 1.1, ease: 'power2.out' }, 0.95)
+      .fromTo(humoTelon, { xPercent: -130 }, { xPercent: 0, duration: 1, ease: 'power2.in' }, 0)
+      .to(old, { opacity: 0, x: 30, duration: 0.7, ease: 'power2.in' }, 0.2)
+      .add(swap, 1)
+      .to(humoTelon, { xPercent: 130, duration: 1.4, ease: 'power2.out' }, 1.05)
       .set(humoTelon, { visibility: 'hidden' })
       .add(() => director.fxRef.setSmoke(0), 1.6)
   },
@@ -383,33 +385,12 @@ const TRANSICIONES: Record<Transicion, (a: TArgs) => void> = {
     gsap
       .timeline({ onComplete: done })
       .set(agujero, { opacity: 1 })
-      .fromTo(agujero, { scale: 0 }, { scale: 1, duration: 1.3, ease: 'power2.in' }, 0)
-      .to(old, { opacity: 0, duration: 0.25 }, 1.05)
-      .add(swap, 1.3)
-      .to(agujero, { opacity: 0, duration: 0.6, ease: 'power1.out' }, 1.35)
-  },
-
-  /** Las letras arden y se van en chispas. */
-  letras({ old, swap, done, director }) {
-    const fx = director.fxRef
-    const st = director.el.stage.getBoundingClientRect()
-    const items = Array.from(old.querySelectorAll<HTMLElement>('h1, p, .nom, .et, .estado, .pase-num')).filter(
-      (e) => e.offsetParent && e.getBoundingClientRect().height > 0,
-    )
-    director.audioRef.ignite()
-    old.classList.add('arde')
-    const tl = gsap.timeline({ onComplete: done })
-    items.forEach((e, k) => {
-      tl.add(() => {
-        const r = e.getBoundingClientRect()
-        fx.burst(r.left - st.left + r.width / 2, r.top - st.top + r.height / 2, 10, 0.6)
-      }, k * 0.06)
-      tl.to(e, { opacity: 0, y: -18, duration: 0.55, ease: 'power2.in' }, k * 0.06)
-    })
-    tl.to(old, { opacity: 0, duration: 0.3 }, '-=0.2')
-      .add(swap)
+      .fromTo(agujero, { scale: 0.05 }, { scale: 1, duration: 0.75, ease: 'power3.in' }, 0)
+      .to(old, { opacity: 0, duration: 0.15 }, 0.62)
       .add(() => {
-        gsap.fromTo(director.currentEl, { opacity: 0 }, { opacity: 1, duration: 0.4 })
-      })
+        swap()
+        director.audioRef.thud(0.9)
+      }, 0.75)
+      .to(agujero, { opacity: 0, duration: 0.35, ease: 'power1.out' }, 0.78)
   },
 }

@@ -42,14 +42,16 @@ export const sala: Scene = {
         <span class="carta-quemado" aria-hidden="true"></span>
       </article>
     `
-    const tl = ctx.tl({ delay: 0.3 })
-    tl.from(el.querySelector('.sala-k'), { opacity: 0, y: 6, duration: 0.6 })
-      .from(el.querySelector('.sala-t .ln > span'), { yPercent: 110, duration: 1.1, ease: 'expo.out' }, '-=0.3')
-      .from(el.querySelector('.sala-linea .ln > span'), { yPercent: 110, duration: 1, ease: 'expo.out' }, '-=0.75')
-      .from(el.querySelector('.carta'), { y: 160, rotation: 5, opacity: 0, duration: 1.4, ease: 'expo.out', onStart: () => audio.whoosh(true) }, '+=0.2')
-      .from(el.querySelectorAll('.carta-pases li'), { opacity: 0, x: -10, stagger: 0.12, duration: 0.5, onStart: () => audio.tick() }, '-=0.8')
-      .from(el.querySelectorAll('.tachado i'), { scaleX: 0, transformOrigin: '0 50%', stagger: 0.15, duration: 0.5, ease: 'power2.out' }, '-=0.4')
-      // la carta empieza a chamuscarse antes de la transición
-      .fromTo(el.querySelector('.carta-quemado'), { scale: 0.6, transformOrigin: '100% 100%' }, { scale: 1.6, duration: 3, ease: 'power1.in' }, '+=1.4')
+    // ritmo rápido: todo entra con fuerza en ~2 s y la carta empieza a quemarse
+    const tl = ctx.tl({ delay: 0.1 })
+    tl.from(el.querySelector('.sala-k'), { opacity: 0, y: 6, duration: 0.35 })
+      .from(el.querySelector('.sala-t .ln > span'), { yPercent: 110, duration: 0.6, ease: 'expo.out' }, 0.1)
+      .from(el.querySelector('.sala-linea .ln > span'), { yPercent: 110, duration: 0.6, ease: 'expo.out' }, 0.35)
+      .from(el.querySelector('.carta'), { y: 180, rotation: 6, opacity: 0, duration: 0.8, ease: 'expo.out', onStart: () => audio.whoosh(true) }, 0.7)
+      .from(el.querySelectorAll('.carta-pases li'), { opacity: 0, x: -10, stagger: 0.07, duration: 0.3, onStart: () => audio.tick() }, 1.1)
+      .from(el.querySelectorAll('.tachado i'), { scaleX: 0, transformOrigin: '0 50%', stagger: 0.08, duration: 0.3, ease: 'power2.out' }, 1.3)
+      // la carta se chamusca deprisa antes del corte
+      .add(() => audio.crackle(0.8), 3.4)
+      .fromTo(el.querySelector('.carta-quemado'), { scale: 0.6, transformOrigin: '100% 100%' }, { scale: 2.4, duration: 2.2, ease: 'power2.in' }, 3.3)
   },
 }

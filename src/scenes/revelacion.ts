@@ -26,6 +26,7 @@ export const revelacion: Scene = {
     el.innerHTML = `
       <div class="rev-negro" aria-hidden="true"></div>
       <div class="rev-cuenta" aria-hidden="true"><span></span></div>
+      <p class="rev-preparados" aria-live="assertive">${md(c.preparados)}</p>
       <div class="rev-final">
         <p class="kicker rev-k">${md(c.antetitulo)}</p>
         <div class="rev-placa" data-testid="rascar-final" data-no-pausa>
@@ -60,7 +61,7 @@ export const revelacion: Scene = {
       rns.forEach((rn) => {
         rn.style.fontSize = '100px'
         const w = rn.querySelector<HTMLElement>('.rn-txt')!.getBoundingClientRect().width || 1
-        rn.style.fontSize = Math.min((100 * avail * 0.96) / w, maxH * 1.1).toFixed(1) + 'px'
+        rn.style.fontSize = Math.min((100 * avail * 0.92) / w, maxH * 1.1).toFixed(1) + 'px'
       })
     }
     void document.fonts.load('100px Anton').then(fit, fit)
@@ -73,7 +74,7 @@ export const revelacion: Scene = {
     fx.setSmoke(0.35)
     audio.fire(0.15)
     audio.drumroll()
-    audio.riser(3.4)
+    audio.riser(4.8)
 
     let revelado = false
     const destapar = () => {
@@ -110,36 +111,52 @@ export const revelacion: Scene = {
 
     let ceniza: Ceniza | null = null
 
-    const tl = ctx.tl({ delay: 0.3 })
-    tl.add(() => document.body.classList.add('rev-oscuro'), 0)
+    const prep = el.querySelector<HTMLElement>('.rev-preparados')!
+    const tl = ctx.tl({ delay: 0.15 })
+    tl.add(() => {
+      document.body.classList.add('rev-oscuro')
+      ctx.stage.classList.add('tension')
+    }, 0)
+    // momento de grupo: que los primos hagan el redoble
+    tl.fromTo(prep, { autoAlpha: 0, scale: reduced ? 1 : 1.25 }, { autoAlpha: 1, scale: 1, duration: 0.3, ease: 'power4.out', onStart: () => (audio.thud(1), ctx.flash(0.3, 0.4)) }, 0)
+      .to(prep, { autoAlpha: 0, duration: 0.25 }, 1.45)
+    // 3 · 2 · 1, cada vez más pesado, con latidos entre medias
     ;['3', '2', '1'].forEach((n, i) => {
-      const at = 0.2 + i * 1.05
+      const at = 1.9 + i * 1.05
       tl.add(() => {
         cuenta.textContent = n
-        audio.thud(0.8 + i * 0.15)
-        ctx.haptic(18)
-        ctx.shake(ctx.stage.querySelector('#scenes'), 5 + i * 2)
+        audio.thud(0.85 + i * 0.2)
+        ctx.haptic(18 + i * 8)
+        ctx.flash(0.12 + i * 0.08, 0.4)
+        ctx.shake(ctx.stage.querySelector('#scenes'), 6 + i * 3)
       }, at)
-      tl.fromTo(cuenta, { scale: reduced ? 1 : 1.7, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.28, ease: 'power4.in' }, at - 0.28)
-      tl.to(cuenta, { opacity: 0, scale: 0.92, duration: 0.5, ease: 'power2.in' }, at + 0.45)
+      tl.add(() => audio.thud(0.25 + i * 0.1), at + 0.5)
+      tl.fromTo(cuenta, { scale: reduced ? 1 : 2, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.24, ease: 'power4.in' }, at - 0.24)
+      tl.to(cuenta, { opacity: 0, scale: 0.9, duration: 0.45, ease: 'power2.in' }, at + 0.5)
     })
-    // apagón… y aparece la ceniza
-    tl.to(negro, { opacity: 1, duration: 0.35, ease: 'power2.in' }, 3.25)
+    // apagón total… y la ceniza sale de la oscuridad
+    tl.to(negro, { opacity: 1, duration: 0.2, ease: 'power2.in' }, 5)
+      .add(() => {
+        ctx.stage.classList.remove('tension')
+        fx.setFire(0)
+        audio.fire(0, 0.1)
+      }, 5.05)
       .add(() => {
         fx.setFire(0.25)
         fx.setSmoke(0.2)
         audio.fire(0.2, 0.5)
+        audio.ignite()
         document.body.classList.remove('rev-oscuro')
         // la ceniza se pinta ya con el tamaño definitivo del nombre
         fit()
         ceniza = crearCeniza(ctx, placa, cv)
         ceniza.rascable(0.5, destapar)
-      }, 3.7)
-      .to(final, { opacity: 1, duration: 0.01 }, 3.7)
-      .to(negro, { opacity: 0, duration: 1.2, ease: 'power2.out' }, 3.8)
-      .from(placa, { scale: 0.94, opacity: 0, duration: 1, ease: 'expo.out' }, 3.8)
-      .from(instr, { opacity: 0, y: 8, duration: 0.6 }, 4.6)
-      .add(() => instr.classList.add('late'), 5.2)
+      }, 5.6)
+      .to(final, { opacity: 1, duration: 0.01 }, 5.6)
+      .to(negro, { opacity: 0, duration: 0.9, ease: 'power2.out' }, 5.65)
+      .from(placa, { scale: 0.92, opacity: 0, duration: 0.8, ease: 'expo.out' }, 5.65)
+      .from(instr, { opacity: 0, y: 8, duration: 0.5 }, 6.2)
+      .add(() => instr.classList.add('late'), 6.7)
 
     // nunca bloquear: si en 20 s no ha rascado, aparece "Soplar la ceniza"
     ctx.after(24000, () => {
@@ -155,6 +172,7 @@ export const revelacion: Scene = {
       ctx.after(900, destapar)
     })
     ctx.cleanup(() => {
+      ctx.stage.classList.remove('tension')
       document.body.classList.remove('rev-oscuro')
       audio.stopRoll()
     })

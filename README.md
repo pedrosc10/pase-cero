@@ -20,8 +20,8 @@ Todo lo que se lee en pantalla está en **`src/config.ts`**. Cambia el texto, gu
   - codificar: `npm run secreto -- "Texto nuevo"` → pega el resultado en config.
   - leer: `npm run secreto -- --leer "base64…"`.
 - `duraciones` → segundos que dura cada pantalla (la secuencia avanza sola).
-- `transiciones` → la transición de salida de cada pantalla: `quemar`, `humo`, `corte`, `chamuscar`, `letras`, `oro`.
-- `vozAlta.segundosBase` / `segundosPorPalabra` → ritmo de la lectura en voz alta.
+- `transiciones` → la transición de salida de cada pantalla: `quemar`, `humo`, `corte`, `chamuscar`, `oro`.
+- `carrera.golpes` / `carrera.giro` → las frases de la pantalla de su carrera.
 - `levanta.texto` → la frase de la pantalla "Levanta la vista." (p. ej. `'Ponte el tuyo.'`); su duración, en `duraciones.levanta`.
 - `vale.nota` → nota del vale (`''` para ocultarla).
 

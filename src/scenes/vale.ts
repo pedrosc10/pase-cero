@@ -38,7 +38,7 @@ export const vale: Scene = {
       sub: `${decode(c.subcabecera)} · ${c.desde}`,
       dir: c.direccion,
       numero: c.numero,
-      pase: 'Pase V',
+      pase: 'Último pase',
       campos,
       nota: c.nota,
       total: ['Total', 'Invitado'],

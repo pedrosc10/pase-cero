@@ -255,36 +255,10 @@ export class AudioEngine {
     this.noise(t, 0.14, { type: 'lowpass', f: 900, gain: 0.3 * strength, attack: 0.001, wet: 0.2 })
   }
 
-  nope() {
-    if (!this.ok()) return
-    const t = this.now()
-    this.tone(t, 0.16, { type: 'triangle', f: 196, f2: 150, gain: 0.2, wet: 0.1 })
-    this.tone(t + 0.13, 0.22, { type: 'triangle', f: 165, f2: 120, gain: 0.2, wet: 0.15 })
-  }
-
   yes() {
     if (!this.ok()) return
     const t = this.now()
     ;[392, 523.25, 659.25].forEach((f, i) => this.tone(t + i * 0.07, 0.9, { type: 'triangle', f, gain: 0.12, wet: 0.45 }))
-  }
-
-  /** Campana de ring: parciales inarmónicos. */
-  bell(times = 2) {
-    if (!this.ok()) return
-    const t0 = this.now()
-    for (let k = 0; k < times; k++) {
-      const t = t0 + k * 0.32
-      ;[1, 2.76, 5.4, 8.93].forEach((m, i) =>
-        this.tone(t, 1.8 - i * 0.3, { f: 640 * m, gain: 0.2 / (i + 1), attack: 0.002, wet: 0.5 }),
-      )
-    }
-  }
-
-  punch() {
-    if (!this.ok()) return
-    const t = this.now()
-    this.noise(t, 0.09, { type: 'lowpass', f: 2400, gain: 0.5, attack: 0.001, wet: 0.2 })
-    this.tone(t, 0.3, { f: 95, f2: 40, gain: 0.6, wet: 0.2 })
   }
 
   /** Rascado: devuelve un control de volumen continuo. */
