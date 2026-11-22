@@ -1,0 +1,14 @@
+node_modules
+dist
+test-results
+playwright-report
+/qa
+*.log
+
+# Privado: nunca al repo público
+/PROMPT.md
+/*.jpg
+/*.jpeg
+/*.png
+/*.heic
+/*.HEIC
