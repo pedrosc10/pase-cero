@@ -164,7 +164,7 @@ export const vale: Scene = {
     ctx.on(el.querySelector('[data-testid="otra-vez"]')!, 'click', () => {
       audio.key()
       store.del('escena')
-      ctx.goto('sala', 'burn')
+      ctx.goto('sala')
     })
   },
 }

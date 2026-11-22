@@ -3,35 +3,34 @@ import { config } from '../config'
 import { md } from '../core/dom'
 import type { Scene } from '../core/scenes'
 
+/** Segundos de cada página: base + por palabra (lectura en voz alta). */
+export const tiemposVoz = () => {
+  const c = config.vozAlta
+  return c.paginas.map((p) => c.segundosBase + p.split(/\s+/).filter(Boolean).length * c.segundosPorPalabra)
+}
+
 export const vozAlta: Scene = {
   id: 'vozAlta',
+  progress: true,
+  pausable: true,
+  duration: () => 1 + tiemposVoz().reduce((a, b) => a + b, 0),
+  out: () => config.transiciones.vozAlta,
   mount(ctx) {
     const c = config.vozAlta
     const { el, audio, fx, reduced } = ctx
     fx.setFire(0.3)
-    audio.pad(false)
     audio.fire(0.2)
     const n = c.paginas.length
     el.innerHTML = `
       <p class="va-aviso"><span class="va-punto" aria-hidden="true"></span>${md(c.aviso)}</p>
-      <div class="va-pag" data-testid="voz-pagina" role="button" tabindex="0" aria-live="assertive" data-autofocus>
-        <p class="va-txt"></p>
-      </div>
-      <div class="pie">
-        <p class="va-hint"><span class="va-n"></span> · ${c.tocaParaSeguir}</p>
-        <button class="btn fuego" type="button" data-testid="redoble" hidden>${c.botonRedoble}</button>
-      </div>
+      <div class="va-pag" aria-live="assertive"><p class="va-txt"></p></div>
+      <div class="pie"><p class="va-hint"></p></div>
     `
     const pag = el.querySelector<HTMLElement>('.va-pag')!
     const txt = el.querySelector<HTMLElement>('.va-txt')!
-    const hint = el.querySelector<HTMLElement>('.va-hint')!
-    const num = el.querySelector<HTMLElement>('.va-n')!
-    const btn = el.querySelector<HTMLButtonElement>('[data-testid="redoble"]')!
-    let i = -1
-    let lock = false
+    const num = el.querySelector<HTMLElement>('.va-hint')!
 
     const fit = () => {
-      // ajusta el tamaño para que cada frase quepa grande y entera
       txt.style.fontSize = ''
       const max = pag.clientHeight
       let fs = parseFloat(getComputedStyle(txt).fontSize)
@@ -41,11 +40,9 @@ export const vozAlta: Scene = {
         txt.style.fontSize = fs + 'px'
       }
     }
-
     const show = (k: number) => {
-      i = k
       txt.innerHTML = md(c.paginas[k])
-      num.textContent = `${k + 1}/${n}`
+      num.textContent = `${k + 1} / ${n}`
       fit()
       audio.thud(0.55 + k * 0.12)
       ctx.haptic(12)
@@ -54,34 +51,17 @@ export const vozAlta: Scene = {
         ctx.shake(pag, 4)
       } else gsap.fromTo(txt, { opacity: 0 }, { opacity: 1, duration: 0.4 })
       if (k === n - 1) {
-        hint.hidden = true
-        btn.hidden = false
-        gsap.from(btn, { opacity: 0, y: 10, duration: 0.6, delay: 0.5 })
         audio.fire(0.4)
         fx.setFire(0.55)
       }
     }
 
     const tl = ctx.tl({ delay: 0.2 })
-    tl.from(el.querySelector('.va-aviso'), { opacity: 0, y: -8, duration: 0.7 }).add(() => show(0), '+=0.3')
-      .from(hint, { opacity: 0, duration: 0.6 }, '+=0.4')
-
-    const advance = () => {
-      if (lock || i < 0 || i >= n - 1) return
-      lock = true
-      ctx.after(420, () => (lock = false))
-      show(i + 1)
-    }
-    ctx.on(pag, 'click', advance)
-    ctx.on(pag, 'keydown', (e: KeyboardEvent) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault()
-        advance()
-      }
-    })
-    ctx.on(btn, 'click', () => {
-      audio.key()
-      ctx.next('cut')
+    tl.from(el.querySelector('.va-aviso'), { opacity: 0, y: -8, duration: 0.7 })
+    let t = 0.8
+    tiemposVoz().forEach((s, k) => {
+      tl.add(() => show(k), t)
+      t += s
     })
   },
 }

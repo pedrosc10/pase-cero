@@ -3,13 +3,17 @@ import { config } from '../config'
 import { md } from '../core/dom'
 import { emblemaBordable, loadEmblema, prepararTrazos, puntosTrazos } from '../core/emblema'
 import type { Scene } from '../core/scenes'
-import { nextBtn, reveal } from './common'
 
 /** Duración de cada grupo de trazos en el bordado (s). */
 const FASES: Record<string, number> = { casas: 1.7, palmeras: 2.1, detalles: 0.8, el: 0.7, jardin: 1.5 }
 
+/** Momento sincero: las ascuas se vuelven hilo y se borda El Jardín. */
 export const jardin: Scene = {
   id: 'jardin',
+  progress: true,
+  pausable: true,
+  duration: () => config.duraciones.jardin,
+  out: () => config.transiciones.jardin,
   mount(ctx) {
     const c = config.jardin
     const { el, audio, fx, reduced } = ctx
@@ -30,24 +34,16 @@ export const jardin: Scene = {
         <h1 class="j-bienvenida">${md(c.bienvenida)}</h1>
         <p class="j-cierre">${md(c.cierre)}</p>
       </div>
-      <div class="pie">${nextBtn(c.siguiente)}</div>
     `
     const lines = el.querySelectorAll<HTMLElement>('.j-l')
     const holder = el.querySelector<HTMLElement>('.jardin-emblema')!
     const fin = el.querySelector<HTMLElement>('.jardin-fin')!
-    const next = el.querySelector<HTMLButtonElement>('[data-testid="siguiente"]')!
-    gsap.set([...lines, fin.children], { opacity: 0 })
+    gsap.set([...lines, ...fin.children], { opacity: 0, y: 10 })
 
-    // Ritmo pausado: cada línea con su aire. Tocar acelera.
-    const tl = ctx.tl({ delay: 0.6, paused: true })
-    lines.forEach((l, i) => {
-      tl.to(l, { opacity: 1, y: 0, duration: 1.4, ease: 'power2.out' }, i * 1.9)
-    })
-    tl.fromTo(lines, { y: 10 }, { y: 0, duration: 0.01 }, 0)
-    tl.to(lines, { opacity: 0.62, duration: 1 }, '+=0.9')
-
-    let bordado: gsap.core.Timeline | null = null
-    let svgReady = false
+    // Ritmo pausado: cada línea con su aire.
+    const tl = ctx.tl({ delay: 0.5 })
+    lines.forEach((l, i) => tl.to(l, { opacity: 1, y: 0, duration: 1.3, ease: 'power2.out' }, i * 1.6))
+    tl.to(lines, { opacity: 0.62, duration: 1 }, '+=0.8')
 
     const empezarBordado = async () => {
       const d = await loadEmblema()
@@ -56,7 +52,6 @@ export const jardin: Scene = {
       const trazos = prepararTrazos(svg)
       const relleno = svg.querySelector<SVGPathElement>('.relleno')!
       const brillo = svg.querySelector<SVGRectElement>('.brillo')!
-      svgReady = true
 
       // Las ascuas se vuelven hilo: viajan hasta el dibujo
       const st = ctx.stage.getBoundingClientRect()
@@ -64,11 +59,9 @@ export const jardin: Scene = {
       fx.forge(pts, 1.8, true)
       audio.whoosh(true)
 
-      const b = ctx.tl({ delay: 1.1 })
-      bordado = b
+      const b = ctx.tl({ delay: 1 })
       b.fromTo(holder, { opacity: 0 }, { opacity: 1, duration: 0.6 }, 0)
       b.add(() => fx.releaseForge(1.6), 0.9)
-      // bordado por grupos, trazo a trazo
       let t = 0.2
       for (const g of ['casas', 'palmeras', 'detalles', 'el', 'jardin']) {
         const grupo = trazos.filter((x) => x.g === g)
@@ -94,28 +87,9 @@ export const jardin: Scene = {
         ctx.haptic(16)
         holder.classList.add('bordado')
       }, t + 0.3)
-      b.to(fin.children[0], { opacity: 1, y: 0, duration: 1.2, ease: 'power2.out' }, t + 0.8)
-      b.fromTo(fin.children[0], { y: 12 }, { y: 0, duration: 1.2, ease: 'expo.out' }, t + 0.8)
-      b.to(fin.children[1], { opacity: 1, duration: 1.2 }, t + 2.2)
-      b.add(() => reveal(next), t + 3.2)
+      b.to(fin.children[0], { opacity: 1, y: 0, duration: 1.2, ease: 'expo.out' }, t + 0.8)
+      b.to(fin.children[1], { opacity: 1, y: 0, duration: 1.2 }, t + 2)
     }
-
-    tl.add(() => {
-      void empezarBordado()
-    })
-    tl.play()
-
-    // tocar para acelerar (sin saltarse el momento)
-    ctx.on(el, 'pointerdown', (e: PointerEvent) => {
-      if ((e.target as HTMLElement).closest('button')) return
-      tl.timeScale(2.5)
-      if (bordado) bordado.timeScale(2)
-    })
-
-    ctx.on(next, 'click', () => {
-      audio.key()
-      ctx.next('burn')
-    })
-    void svgReady
+    tl.add(() => void empezarBordado(), 4.6)
   },
 }

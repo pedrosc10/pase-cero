@@ -2,8 +2,13 @@
  * ─────────────────────────────────────────────────────────────
  *  PASE CERO · Configuración central
  * ─────────────────────────────────────────────────────────────
- *  Todo lo que se lee en pantalla está aquí. Cambia los textos
- *  sin tocar la lógica y vuelve a desplegar (ver README.md).
+ *  Todo lo que se lee en pantalla está aquí, y también cuánto dura
+ *  cada pantalla. Cambia lo que quieras sin tocar la lógica y vuelve
+ *  a desplegar (ver README.md).
+ *
+ *  La experiencia es una SECUENCIA AUTOMÁTICA (tipo tráiler). Solo hay
+ *  dos interacciones: mantener pulsado al principio y rascar la ceniza
+ *  en la revelación final. Un toque en cualquier momento pausa/reanuda.
  *
  *  Marcado ligero en los textos:
  *    _texto_   → cursiva serif (voz "alta cocina")
@@ -21,6 +26,8 @@
 const secreto = (b64: string) => ({ b64 }) as const
 export type Secreto = ReturnType<typeof secreto>
 
+export type Transicion = 'quemar' | 'humo' | 'corte' | 'chamuscar' | 'letras' | 'oro'
+
 export const config = {
   /** Nombres. */
   para: 'Antonio',
@@ -31,10 +38,41 @@ export const config = {
     tituloPestana: 'Para Antonio',
   },
 
-  /** Clave de guardado del progreso (cámbiala para "resetear" a todo el mundo). */
-  storageKey: 'pase-cero:v1',
+  /**
+   * ⏱  DURACIÓN DE CADA PANTALLA (segundos).
+   * Calculadas con: ~2,5 s de animación de entrada + el texto a ~3 palabras/s
+   * (lectura cómoda en voz baja). Súbelas o bájalas a tu gusto.
+   * La barra de arriba avanza con estos tiempos.
+   */
+  duraciones: {
+    sala: 10, // bienvenida + carta (≈25 palabras)
+    pase0: 16, // entrecot + ficha de cata que se escribe sola (≈50 palabras)
+    pase1: 10, // la ceniza se aparta sola (≈20 palabras)
+    pase2: 10, // el humo se abre y salen las pistas (≈16 palabras)
+    pase3: 12, // contador 2026 → 1972 (≈20 palabras)
+    pase4: 12, // cartel de combate (≈25 palabras)
+    jardin: 20, // líneas + el emblema se borda (≈25 palabras, ritmo pausado)
+    levanta: 5, // pausa obligatoria (la familia lleva el polar)
+    /** Tras rascar la revelación, segundos hasta pasar al vale. */
+    revelacionTrasRascar: 7,
+  },
 
-  // ── 0 · Entrada ─────────────────────────────────────────────
+  /** Transición de SALIDA de cada pantalla hacia la siguiente. */
+  transiciones: {
+    entrada: 'quemar',
+    sala: 'chamuscar',
+    pase0: 'humo',
+    pase1: 'corte',
+    pase2: 'humo',
+    pase3: 'corte',
+    pase4: 'letras',
+    jardin: 'oro',
+    levanta: 'corte',
+    vozAlta: 'corte',
+    revelacion: 'quemar',
+  } satisfies Record<string, Transicion>,
+
+  // ── 0 · Entrada (interacción 1) ─────────────────────────────
   entrada: {
     titulo: 'Para Antonio.',
     instruccion: 'Mantén pulsado para encender las brasas',
@@ -42,6 +80,11 @@ export const config = {
     avisoSilencio: 'Si no oyes nada, quita el modo silencio del iPhone',
     continuar: 'Continuar donde lo dejaste',
     empezarDeNuevo: 'Empezar de nuevo',
+  },
+
+  /** Indicador de pausa (al tocar la pantalla). */
+  pausa: {
+    texto: 'En pausa · toca para seguir',
   },
 
   // ── 1 · Sala ────────────────────────────────────────────────
@@ -65,7 +108,6 @@ export const config = {
         ['Maridaje', 'a criterio de la casa'],
       ] as [string, string][],
     },
-    boton: 'Empezar el servicio',
   },
 
   // ── 2 · Pase 0 ──────────────────────────────────────────────
@@ -73,8 +115,7 @@ export const config = {
     num: '0',
     titulo: 'Lo que tienes en la mano',
     intro: ['Sí. Eso.', 'El entrecot de la caja.'],
-    peticion: 'Antes de seguir, el sumiller debería catarlo.',
-    boton: 'Catar',
+    peticion: 'El sumiller procede a catarlo.',
     ficha: [
       ['Vista', 'Rojo intenso. Brillo de film transparente.'],
       ['Nariz', 'Notas de nevera. Fondo de caja de cartón.'],
@@ -84,56 +125,38 @@ export const config = {
     ] as [string, string][],
     veredicto: 'Diagnóstico: _le falta fuego._',
     remate: 'A eso vamos.',
-    siguiente: 'Siguiente pase',
   },
 
-  // ── 3 · Pase I · Rascar ─────────────────────────────────────
+  // ── 3 · Pase I · Hollín ─────────────────────────────────────
   pase1: {
     num: 'I',
     titulo: 'Hollín',
-    instruccion: 'Rasca la ceniza',
     oculto: ['Cinco años sirviendo estrellas.', 'Hoy descansas.', '*Hoy toca brasa.*'],
     remate: 'Ni pinzas, ni espumas, ni esferas. Fuego y punto.',
-    ayuda: 'Soplar la ceniza',
-    siguiente: 'Siguiente pase',
   },
 
-  // ── 4 · Pase II · Avivar ────────────────────────────────────
+  // ── 4 · Pase II · Humo ──────────────────────────────────────
   pase2: {
     num: 'II',
     titulo: 'Humo',
-    instruccion: 'Mantén pulsado para avivar el fuego',
     oculto: ['No está en Madrid.', 'Está en Alcalá.', '*En El Cercado.*'],
     remate: 'Para llegar no hace falta AVE.',
-    ayuda: 'Avivar del tirón',
-    siguiente: 'Siguiente pase',
   },
 
-  // ── 5 · Pase III · Año ──────────────────────────────────────
+  // ── 5 · Pase III · Añada (contador) ─────────────────────────
   pase3: {
     num: 'III',
     titulo: 'Añada',
     intro: 'Un sumiller siempre pregunta la añada.',
     pregunta: '¿Desde cuándo arde esta brasa?',
+    desde: 2026,
     respuesta: 1972,
-    /** Frases al fallar (el código elige según el número). */
-    fallos: {
-      masAntiguo: 'Más antiguo. Más que tu primer Betis-Sevilla.',
-      masModerno: 'Tampoco tanto, que no es la Giralda.',
-      teQuemasAntes: 'Te quemas. Un pelín antes.',
-      teQuemasDespues: 'Te quemas. Un pelín después.',
-      futuro: 'Del futuro todavía no hay brasa.',
-      prehistoria: 'Eso ya es arqueología, primo.',
-      incompleto: 'Cuatro cifras, sumiller.',
-    },
-    /** Pistas que aparecen fallo a fallo, para que nunca se atasque. */
-    pistas: ['Pista: los setenta.', 'Pista: 197_', 'Última pista: el último número es el dos.'],
-    rendirse: 'Rendirse con dignidad',
-    acierto: ['Bien catado.', 'Familia y brasa desde entonces.'],
-    siguiente: 'Siguiente pase',
+    /** Aparece mientras el contador baja (remate bético). */
+    comentario: 'Más antiguo que tu primer Betis-Sevilla.',
+    acierto: ['Clavado.', 'Familia y brasa desde entonces.'],
   },
 
-  // ── 6 · Pase IV · Combate ───────────────────────────────────
+  // ── 6 · Pase IV · El combate (cartel) ───────────────────────
   pase4: {
     num: 'IV',
     titulo: 'El combate',
@@ -141,11 +164,8 @@ export const config = {
     rival: secreto('TGEgUGVyZGlkYQ=='), // nombre del rincón ya conocido
     esquinaConocida: { etiqueta: 'Esquina roja', estado: 'Conquistada' },
     esquinaPendiente: { etiqueta: 'Esquina de ascuas', nombre: '???', estado: 'Visitas: 0' },
-    pregunta: 'Una ya la tienes. ¿Cuál te falta?',
-    falloConocida: 'Esa ya la conoces. Buen intento.',
-    acierto: ['Esa.', 'La que nunca has pisado.'],
+    lineas: ['Una ya la tienes.', 'Te falta la otra.'],
     remate: 'Hay que completar la colección.',
-    siguiente: 'Siguiente pase',
   },
 
   // ── 7 · Momento sincero · El Jardín ─────────────────────────
@@ -156,16 +176,12 @@ export const config = {
     bienvenida: 'Bienvenido al Jardín.',
     cierre: 'Volvéis los dos. Ya era hora.',
     alt: 'Emblema de El Jardín: cuatro casas con tejados en zigzag, dos palmeras y el nombre escrito a mano',
-    siguiente: 'Seguir',
   },
 
-  // ── 7b · Levanta la vista ───────────────────────────────────
+  // ── 7b · Levanta la vista (pausa automática) ────────────────
   levanta: {
     /** Cámbialo a 'Ponte el tuyo.' si quieres. */
     texto: 'Levanta la vista.',
-    /** Segundos que no se puede avanzar. */
-    espera: 5,
-    siguiente: 'Seguir',
   },
 
   // ── 8 · En voz alta ─────────────────────────────────────────
@@ -177,17 +193,20 @@ export const config = {
       'No está en la carta.',
       'Redoble, por favor.',
     ],
-    tocaParaSeguir: 'Toca para seguir',
-    botonRedoble: 'Que suene el redoble',
+    /** Tiempo por página = base + segundos por palabra (lectura EN VOZ ALTA). */
+    segundosBase: 2,
+    segundosPorPalabra: 0.5,
   },
 
-  // ── 9 · Revelación ──────────────────────────────────────────
+  // ── 9 · Revelación (interacción 2: rascar) ──────────────────
   revelacion: {
     antetitulo: 'Pase V · Fuera de carta',
+    instruccion: 'Rasca la ceniza',
+    /** Solo aparece si en 20 s no ha rascado (para no atascarse nunca). */
+    ayuda: 'Soplar la ceniza',
     linea1: secreto('VW5hIGNvbWlkYSBlbg=='),
     nombre: secreto('VmVudGEgRWwgQ2Fycml0bw=='),
     pie: 'Desde 1972 · Alcalá de Guadaíra',
-    boton: 'Ver tu vale',
   },
 
   // ── 10 · Vale ───────────────────────────────────────────────

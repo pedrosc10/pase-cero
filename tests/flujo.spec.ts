@@ -2,11 +2,15 @@ import { expect, test, type Page } from '@playwright/test'
 import fs from 'node:fs'
 
 /**
- * Recorre la experiencia completa como lo haría Antonio, con capturas
- * de cada pantalla en qa/shots/<dispositivo>/ y cronometraje.
+ * Secuencia automática completa, como la verá Antonio:
+ * solo dos interacciones (mantener pulsado al inicio y rascar al final).
+ * Capturas en qa/shots/<dispositivo>/ y cronometraje en tiempos.json.
  */
-test('flujo completo', async ({ page }, info) => {
+test.setTimeout(330_000)
+
+test('secuencia completa', async ({ page }, info) => {
   const dir = `qa/shots/${info.project.name}`
+  fs.rmSync(dir, { recursive: true, force: true })
   fs.mkdirSync(dir, { recursive: true })
   let n = 0
   const shot = async (name: string) => {
@@ -15,172 +19,132 @@ test('flujo completo', async ({ page }, info) => {
   const errors: string[] = []
   page.on('pageerror', (e) => errors.push(String(e)))
   page.on('console', (m) => m.type() === 'error' && errors.push(m.text()))
-  const t0 = Date.now()
   const tiempos: Record<string, number> = {}
+  let t0 = 0
   const marca = (k: string) => (tiempos[k] = Math.round((Date.now() - t0) / 100) / 10)
+  const escena = async (id: string, timeout = 40_000) => {
+    await page.waitForSelector(`[data-scene="${id}"]`, { timeout })
+    marca(id)
+  }
 
   await page.goto('./')
   await expect(page).toHaveTitle('Para Antonio')
   await page.waitForTimeout(1800)
   await shot('entrada')
 
-  // 0 · mantener pulsado
-  await hold(page, '[data-testid="encender"]', 1400)
-  await shot('entrada-cargando')
-  await hold(page, '[data-testid="encender"]', 3000)
-  marca('entrada')
-  await page.waitForTimeout(300)
+  // ── Interacción 1: mantener pulsado ──
+  t0 = Date.now()
+  await hold(page, '[data-testid="encender"]', 2600)
+  await page.waitForTimeout(250)
   await shot('entrada-encendida')
 
-  // 1 · sala
-  await page.waitForSelector('[data-scene="sala"]')
-  await page.waitForTimeout(2900)
+  // ── Secuencia automática (sin tocar nada) ──
+  await escena('sala')
+  await page.waitForTimeout(3500)
   await shot('sala')
-  await page.click('[data-testid="servicio"]')
-  marca('sala')
+  await page.waitForTimeout(4500)
+  await shot('sala-fin')
 
-  // 2 · pase 0
-  await page.waitForSelector('[data-scene="pase0"]')
+  await escena('pase0')
   await page.waitForTimeout(2600)
   await shot('pase0')
-  await page.click('[data-testid="catar"]')
-  await page.locator('[data-testid="siguiente"]').waitFor({ state: 'visible', timeout: 15000 })
-  await page.waitForTimeout(700)
-  await shot('pase0-ficha')
-  await page.click('[data-testid="siguiente"]')
-  marca('pase0')
-
-  // 3 · pase I · rascar
-  await page.waitForSelector('[data-scene="pase1"]')
-  await page.waitForTimeout(1800)
-  await shot('pase1')
-  const box = (await page.locator('[data-testid="rascar"]').boundingBox())!
-  await page.mouse.move(box.x + 10, box.y + 10)
-  await page.mouse.down()
-  for (let row = 0; row < 9; row++) {
-    const y = box.y + 12 + (row * (box.height - 24)) / 8
-    await page.mouse.move(box.x + (row % 2 ? box.width - 10 : 10), y, { steps: 10 })
-    if (row === 3) await shot('pase1-rascando')
-  }
-  await page.mouse.up()
-  await page.locator('[data-testid="siguiente"]').waitFor({ state: 'visible', timeout: 15000 })
-  await page.waitForTimeout(500)
-  await shot('pase1-revelado')
-  await page.click('[data-testid="siguiente"]')
-  marca('pase1')
-
-  // 4 · pase II · avivar
-  await page.waitForSelector('[data-scene="pase2"]')
-  await page.waitForTimeout(1800)
-  await shot('pase2')
-  await hold(page, '[data-testid="avivar"]', 2200)
-  await shot('pase2-avivando')
-  await hold(page, '[data-testid="avivar"]', 5000)
-  await page.locator('[data-testid="siguiente"]').waitFor({ state: 'visible', timeout: 15000 })
-  await page.waitForTimeout(400)
-  await shot('pase2-revelado')
-  await page.click('[data-testid="siguiente"]')
-  marca('pase2')
-
-  // 5 · pase III · año (un fallo con guasa y luego el acierto)
-  await page.waitForSelector('[data-scene="pase3"]')
-  await page.waitForTimeout(2000)
-  await shot('pase3')
-  for (const k of '1985') await page.click(`.tecla[data-k="${k}"]`)
-  await page.waitForTimeout(900)
-  await shot('pase3-fallo')
-  for (const k of '1972') await page.click(`.tecla[data-k="${k}"]`)
-  await page.locator('[data-testid="siguiente"]').waitFor({ state: 'visible', timeout: 15000 })
-  await page.waitForTimeout(500)
-  await shot('pase3-acierto')
-  await page.click('[data-testid="siguiente"]')
-  marca('pase3')
-
-  // 6 · pase IV · combate
-  await page.waitForSelector('[data-scene="pase4"]')
-  await page.waitForTimeout(3300)
-  await shot('pase4')
-  await page.click('[data-testid="esquina-conocida"]')
+  // pausa por toque (opcional): congela y reanuda
+  await page.mouse.click(200, 420)
+  await expect(page.locator('body')).toHaveClass(/pausado/)
   await page.waitForTimeout(600)
-  await shot('pase4-fallo')
-  await page.click('[data-testid="esquina-pendiente"]')
-  await page.locator('[data-testid="siguiente"]').waitFor({ state: 'visible', timeout: 15000 })
-  await page.waitForTimeout(500)
-  await shot('pase4-acierto')
-  await page.click('[data-testid="siguiente"]')
-  marca('pase4')
-
-  // 7 · El Jardín (bordado)
-  await page.waitForSelector('[data-scene="jardin"]')
-  await page.waitForTimeout(4200)
-  await shot('jardin-lineas')
-  await page.waitForTimeout(3200)
-  await shot('jardin-bordando')
-  await page.waitForTimeout(3000)
-  await shot('jardin-bordando-2')
-  await page.locator('[data-testid="siguiente"]').waitFor({ state: 'visible', timeout: 30000 })
-  await page.waitForTimeout(600)
-  await shot('jardin-final')
-  await page.click('[data-testid="siguiente"]')
-  marca('jardin')
-
-  // 7b · Levanta la vista (no se puede avanzar ~5 s)
-  await page.waitForSelector('[data-scene="levanta"]')
-  await page.waitForTimeout(2000)
-  await shot('levanta')
-  await expect(page.locator('[data-testid="siguiente"]')).toBeHidden()
-  await page.locator('[data-testid="siguiente"]').waitFor({ state: 'visible', timeout: 10000 })
-  await shot('levanta-seguir')
-  await page.click('[data-testid="siguiente"]')
-  marca('levanta')
-
-  // 8 · En voz alta
-  await page.waitForSelector('[data-scene="vozAlta"]')
+  await shot('pausa')
   await page.waitForTimeout(1500)
-  await shot('voz-1')
-  for (let i = 2; i <= 4; i++) {
-    await page.click('[data-testid="voz-pagina"]')
-    await page.waitForTimeout(900)
-    await shot(`voz-${i}`)
-  }
-  await page.click('[data-testid="redoble"]')
-  marca('vozAlta')
+  await page.mouse.click(200, 420)
+  await expect(page.locator('body')).not.toHaveClass(/pausado/)
+  await page.waitForTimeout(5500)
+  await shot('pase0-cata')
+  await page.waitForTimeout(5000)
+  await shot('pase0-veredicto')
 
-  // 9 · Revelación
-  await page.waitForSelector('[data-scene="revelacion"]')
+  await escena('pase1')
+  await page.waitForTimeout(2400)
+  await shot('pase1-soplando')
+  await page.waitForTimeout(4200)
+  await shot('pase1')
+
+  await escena('pase2')
+  await page.waitForTimeout(3200)
+  await shot('pase2-humo')
+  await page.waitForTimeout(4200)
+  await shot('pase2')
+
+  await escena('pase3')
+  await page.waitForTimeout(4000)
+  await shot('pase3-contando')
+  await page.waitForTimeout(5000)
+  await shot('pase3')
+
+  await escena('pase4')
+  await page.waitForTimeout(3600)
+  await shot('pase4-cartel')
+  await page.waitForTimeout(5200)
+  await shot('pase4')
+
+  await escena('jardin')
+  await page.waitForTimeout(4500)
+  await shot('jardin-lineas')
+  await page.waitForTimeout(5000)
+  await shot('jardin-bordando')
+  await page.waitForTimeout(8000)
+  await shot('jardin-final')
+
+  await escena('levanta')
+  await page.waitForTimeout(2500)
+  await shot('levanta')
+
+  await escena('vozAlta')
+  await page.waitForTimeout(2600)
+  await shot('voz-1')
+  await page.waitForTimeout(5600)
+  await shot('voz-2')
+  await page.waitForTimeout(9000)
+  await shot('voz-4')
+
+  // ── Revelación ──
+  await escena('revelacion')
   await page.waitForTimeout(1300)
   await shot('rev-cuenta')
-  await page.waitForTimeout(3300)
-  await shot('rev-apagon')
-  await page.waitForTimeout(1100)
-  await shot('rev-forja')
-  await page.locator('[data-testid="vale"]').waitFor({ state: 'visible', timeout: 15000 })
-  await page.waitForTimeout(800)
+  await page.locator('[data-testid="rascar-final"]').waitFor({ state: 'visible' })
+  await page.waitForTimeout(4200)
+  await shot('rev-ceniza')
+  marca('ceniza-lista')
+  // ── Interacción 2: rascar ──
+  const box = (await page.locator('[data-testid="rascar-final"]').boundingBox())!
+  await page.mouse.move(box.x + 10, box.y + 10)
+  await page.mouse.down()
+  for (let row = 0; row < 8; row++) {
+    const y = box.y + 10 + (row * (box.height - 20)) / 7
+    await page.mouse.move(box.x + (row % 2 ? box.width - 10 : 10), y, { steps: 12 })
+    if (row === 3) await shot('rev-rascando')
+  }
+  await page.mouse.up()
+  marca('rascado')
+  await page.waitForTimeout(2600)
   await shot('rev-final')
-  await page.click('[data-testid="vale"]')
-  marca('revelacion')
 
-  // 10 · Vale
-  await page.waitForSelector('[data-scene="vale"]')
+  // ── Vale ──
+  await escena('vale', 20_000)
   await page.waitForTimeout(4200)
   await shot('vale')
   await page.locator('.scene-vale').evaluate((e) => e.scrollTo(0, e.scrollHeight))
   await page.waitForTimeout(400)
   await shot('vale-botones')
-  await page.click('[data-testid="guardar"]')
-  await page.waitForTimeout(1200)
-  await shot('vale-guardar')
-  marca('vale')
-
-  // enlaces correctos (sin abrirlos)
   const llegar = await page.getAttribute('[data-testid="llegar"]', 'href')
   expect(llegar).toMatch(/maps\.apple\.com|google\.com\/maps/)
   expect(await page.getAttribute('[data-testid="instagram"]', 'href')).toContain('instagram.com/')
+  await page.click('[data-testid="guardar"]')
+  await page.waitForTimeout(1200)
+  await shot('vale-guardar')
 
   // persistencia: recargar y ofrecer continuar
   await page.reload()
   await page.waitForTimeout(1200)
-  await hold(page, '[data-testid="encender"]', 3000)
+  await hold(page, '[data-testid="encender"]', 2600)
   await page.locator('[data-testid="continuar"]').waitFor({ state: 'visible', timeout: 5000 })
   await shot('reanudar')
 

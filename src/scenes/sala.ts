@@ -1,5 +1,5 @@
 import { config } from '../config'
-import { icon, md } from '../core/dom'
+import { md } from '../core/dom'
 import type { Scene } from '../core/scenes'
 
 /** Pequeño ornamento: llama entre filetes, dibujado a mano en SVG. */
@@ -7,6 +7,10 @@ export const ornamento = `<svg class="orn" viewBox="0 0 120 24" aria-hidden="tru
 
 export const sala: Scene = {
   id: 'sala',
+  progress: true,
+  pausable: true,
+  duration: () => config.duraciones.sala,
+  out: () => config.transiciones.sala,
   mount(ctx) {
     const c = config.sala
     const { el, audio, fx } = ctx
@@ -37,21 +41,15 @@ export const sala: Scene = {
         </div>
         <span class="carta-quemado" aria-hidden="true"></span>
       </article>
-      <div class="pie"><button class="btn" type="button" data-autofocus data-testid="servicio">${c.boton} ${icon.arrow}</button></div>
     `
-    const tl = ctx.tl({ delay: 0.35 })
+    const tl = ctx.tl({ delay: 0.3 })
     tl.from(el.querySelector('.sala-k'), { opacity: 0, y: 6, duration: 0.6 })
       .from(el.querySelector('.sala-t .ln > span'), { yPercent: 110, duration: 1.1, ease: 'expo.out' }, '-=0.3')
       .from(el.querySelector('.sala-linea .ln > span'), { yPercent: 110, duration: 1, ease: 'expo.out' }, '-=0.75')
-      .from(el.querySelector('.carta'), { y: 140, rotation: 4, opacity: 0, duration: 1.3, ease: 'expo.out' }, '-=0.4')
-      .from(el.querySelectorAll('.carta-pases li'), { opacity: 0, x: -10, stagger: 0.08, duration: 0.5 }, '-=0.7')
-      .from(el.querySelector('.pie'), { opacity: 0, duration: 0.6 }, '-=0.2')
-      .add(() => audio.tick(), 1.6)
-
-    const btn = el.querySelector<HTMLButtonElement>('.pie .btn')!
-    ctx.on(btn, 'click', () => {
-      audio.key()
-      ctx.next('burn')
-    })
+      .from(el.querySelector('.carta'), { y: 160, rotation: 5, opacity: 0, duration: 1.4, ease: 'expo.out', onStart: () => audio.whoosh(true) }, '+=0.2')
+      .from(el.querySelectorAll('.carta-pases li'), { opacity: 0, x: -10, stagger: 0.12, duration: 0.5, onStart: () => audio.tick() }, '-=0.8')
+      .from(el.querySelectorAll('.tachado i'), { scaleX: 0, transformOrigin: '0 50%', stagger: 0.15, duration: 0.5, ease: 'power2.out' }, '-=0.4')
+      // la carta empieza a chamuscarse antes de la transición
+      .fromTo(el.querySelector('.carta-quemado'), { scale: 0.6, transformOrigin: '100% 100%' }, { scale: 1.6, duration: 3, ease: 'power1.in' }, '+=1.4')
   },
 }

@@ -1,6 +1,4 @@
-import { gsap } from 'gsap'
 import type { Ctx } from '../core/scenes'
-import { icon } from '../core/dom'
 
 export function paseHead(num: string, titulo: string) {
   return `
@@ -24,14 +22,3 @@ export function animHead(ctx: Ctx, tl: gsap.core.Timeline) {
   return tl
 }
 
-export const nextBtn = (txt: string, id = 'siguiente') =>
-  `<button class="btn" type="button" data-testid="${id}" hidden>${txt} ${icon.arrow}</button>`
-
-/** Muestra un botón oculto con una entrada sobria. */
-export function reveal(btn: HTMLElement | null, tl?: gsap.core.Timeline, at?: number | string) {
-  if (!btn) return
-  btn.hidden = false
-  const from = { opacity: 0, y: 10, duration: 0.6, ease: 'power3.out' }
-  if (tl) tl.from(btn, from, at)
-  else gsap.from(btn, from)
-}

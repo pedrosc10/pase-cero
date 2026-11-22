@@ -12,6 +12,7 @@ const DOTS = 44
 export const entrada: Scene = {
   id: 'entrada',
   noSave: true,
+  out: () => config.transiciones.entrada,
   mount(ctx) {
     const c = config.entrada
     const { el, audio, fx } = ctx
@@ -47,9 +48,12 @@ export const entrada: Scene = {
     // El emblema, casi invisible entre la ceniza (se reconocerá al bordarse)
     if (config.emblemaEnEntrada) {
       const huella = el.querySelector<HTMLElement>('.ent-huella')!
-      void loadEmblema().then((d) => {
-        huella.innerHTML = emblemaFill(d)
-        huella.classList.add('on')
+      // diferido: no compite con la primera pintura ni con el gesto inicial
+      ctx.after(1600, () => {
+        void loadEmblema().then((d) => {
+          huella.innerHTML = emblemaFill(d)
+          requestAnimationFrame(() => huella.classList.add('on'))
+        })
       })
     }
     const ring = el.querySelector<HTMLButtonElement>('.ent-anillo')!
@@ -107,7 +111,7 @@ export const entrada: Scene = {
           gsap.to([el.querySelector('.ent-instr'), el.querySelector('.ent-pie')], { opacity: 0, duration: 0.4 })
           gsap.from(box.children, { opacity: 0, y: 14, stagger: 0.1, duration: 0.6, delay: 0.3, ease: 'power3.out' })
         } else {
-          ctx.after(1100, () => ctx.next('burn'))
+          ctx.after(1100, () => ctx.next())
         }
       },
     })
@@ -117,10 +121,10 @@ export const entrada: Scene = {
       const b = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-a]')
       if (!b) return
       audio.key()
-      if (b.dataset.a === 'seguir' && saved) ctx.goto(saved, 'burn')
+      if (b.dataset.a === 'seguir' && saved) ctx.goto(saved)
       else {
         store.del('escena')
-        ctx.next('burn')
+        ctx.next()
       }
     })
   },

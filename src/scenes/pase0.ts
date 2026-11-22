@@ -1,8 +1,7 @@
-import { gsap } from 'gsap'
 import { config } from '../config'
 import { md } from '../core/dom'
 import type { Scene } from '../core/scenes'
-import { animHead, nextBtn, paseHead, reveal } from './common'
+import { animHead, paseHead } from './common'
 
 /** Entrecot dibujado a mano: contorno, cordón de grasa, vetas y brillo de film. */
 const entrecot = `
@@ -35,9 +34,36 @@ const entrecot = `
   <text x="280" y="194" text-anchor="end" font-family="IBM Plex Mono, monospace" font-size="8.5" letter-spacing=".8" fill="#a89b87">ENTRECOT · 1 UD · CRUDO</text>
 </svg>`
 
+/** Escribe un texto letra a letra (máquina de escribir) sobre un timeline. */
+export function escribir(tl: gsap.core.Timeline, el: HTMLElement, at: number | string, cps = 38, onTick?: () => void) {
+  const full = el.textContent || ''
+  el.textContent = ''
+  el.setAttribute('aria-label', full)
+  const o = { n: 0 }
+  tl.to(
+    o,
+    {
+      n: full.length,
+      duration: full.length / cps,
+      ease: 'none',
+      onUpdate: () => {
+        const k = Math.round(o.n)
+        if (el.textContent!.length !== k) {
+          el.textContent = full.slice(0, k)
+          if (k % 3 === 0) onTick?.()
+        }
+      },
+    },
+    at,
+  )
+}
+
 export const pase0: Scene = {
   id: 'pase0',
-  nav: 0,
+  progress: true,
+  pausable: true,
+  duration: () => config.duraciones.pase0,
+  out: () => config.transiciones.pase0,
   mount(ctx) {
     const c = config.pase0
     const { el, audio, fx } = ctx
@@ -52,76 +78,58 @@ export const pase0: Scene = {
           ${entrecot}
           <p class="p0-peticion"><em>${md(c.peticion)}</em></p>
         </div>
-        <section class="ficha" aria-label="Ficha de cata" hidden>
+        <section class="ficha" aria-label="Ficha de cata">
           <header class="ficha-h"><span>Ficha de cata</span><span>Nº 0</span></header>
           <dl>${c.ficha.map(([k, v]) => `<div class="fila"><dt>${k}</dt><dd>${md(v)}</dd></div>`).join('')}</dl>
           <p class="ficha-veredicto">${md(c.veredicto)}</p>
         </section>
       </div>
-      <div class="pie">
-        <p class="remate p0-remate" hidden>${md(c.remate)}</p>
-        <button class="btn fuego" type="button" data-testid="catar" data-autofocus>${c.boton}</button>
-        ${nextBtn(c.siguiente)}
-      </div>
+      <div class="pie"><p class="remate p0-remate">${md(c.remate)}</p></div>
     `
+    const antes = el.querySelector<HTMLElement>('.p0-antes')!
+    const intro = el.querySelector<HTMLElement>('.p0-intro')!
+    const ficha = el.querySelector<HTMLElement>('.ficha')!
+    const remate = el.querySelector<HTMLElement>('.p0-remate')!
+    ficha.style.display = 'none'
+    remate.style.opacity = '0'
+
     const tl = ctx.tl({ delay: 0.15 })
     animHead(ctx, tl)
-    tl.from(el.querySelectorAll('.p0-intro .ln > span'), { yPercent: 110, duration: 0.9, stagger: 0.18, ease: 'expo.out' }, 0.5)
-      .from(el.querySelector('.p0-carne'), { opacity: 0, scale: 0.92, rotation: -4, duration: 1.4, ease: 'expo.out' }, 0.8)
-      .from(el.querySelector('.p0-peticion'), { opacity: 0, y: 8, duration: 0.7 }, 1.3)
-      .from(el.querySelector('[data-testid="catar"]'), { opacity: 0, y: 10, duration: 0.6 }, 1.6)
-
-    // el film "brilla" de vez en cuando
-    const glare = gsap.to(el.querySelector('.c-film'), { opacity: 0.35, duration: 1.6, yoyo: true, repeat: -1, ease: 'sine.inOut' })
-    ctx.cleanup(() => glare.kill())
-
-    const catar = el.querySelector<HTMLButtonElement>('[data-testid="catar"]')!
-    const next = el.querySelector<HTMLButtonElement>('[data-testid="siguiente"]')!
-    ctx.on(catar, 'click', () => {
-      audio.key()
-      catar.disabled = true
-      const antes = el.querySelector<HTMLElement>('.p0-antes')!
-      const ficha = el.querySelector<HTMLElement>('.ficha')!
-      const filas = ficha.querySelectorAll<HTMLElement>('.fila')
-      const t = ctx.tl()
-      const intro = el.querySelector<HTMLElement>('.p0-intro')!
-      t.to([antes, catar, intro], { opacity: 0, y: -10, duration: 0.4, ease: 'power2.in' })
-        .add(() => {
-          antes.hidden = true
-          catar.hidden = true
-          intro.hidden = true
-          ficha.hidden = false
-        })
-        .from(ficha, { opacity: 0, y: 30, rotation: -1.5, duration: 0.8, ease: 'expo.out' })
-        .from(ficha.querySelector('.ficha-h'), { opacity: 0, duration: 0.4 }, '-=0.4')
-      filas.forEach((f, i) => {
-        t.from(f, { opacity: 0, x: -12, duration: 0.45, ease: 'power3.out', onStart: () => audio.tick() }, i === 0 ? '+=0.1' : '+=0.55')
-      })
-      t.from(
-        ficha.querySelector('.ficha-veredicto'),
-        {
-          opacity: 0,
-          scale: 1.25,
-          duration: 0.35,
-          ease: 'power4.in',
-          onComplete: () => {
-            audio.thud(0.7)
-            ctx.shake(ficha, 5)
-            ctx.haptic(18)
-          },
+    tl.from(el.querySelectorAll('.p0-intro .ln > span'), { yPercent: 110, duration: 0.9, stagger: 0.2, ease: 'expo.out' }, 0.5)
+      .from(el.querySelector('.p0-carne'), { opacity: 0, scale: 0.9, rotation: -5, duration: 1.4, ease: 'expo.out' }, 0.8)
+      .from(el.querySelector('.p0-peticion'), { opacity: 0, y: 8, duration: 0.7 }, 1.6)
+      .to(el.querySelector('.c-film'), { opacity: 0.35, duration: 0.8, yoyo: true, repeat: 1 }, 1.8)
+      // la cata se escribe sola
+      .to([antes, intro], { opacity: 0, y: -14, duration: 0.45, ease: 'power2.in' }, 3.6)
+      .add(() => {
+        antes.style.display = 'none'
+        intro.style.display = 'none'
+        ficha.style.display = ''
+        audio.whoosh(true)
+      }, 4.05)
+      .from(ficha, { opacity: 0, y: 40, rotation: -2.5, duration: 0.8, ease: 'expo.out' }, 4.1)
+    let t = 4.7
+    ficha.querySelectorAll<HTMLElement>('.fila').forEach((f) => {
+      tl.from(f.querySelector('dt'), { opacity: 0, duration: 0.2 }, t)
+      const dd = f.querySelector<HTMLElement>('dd')!
+      const len = (dd.textContent || '').length
+      escribir(tl, dd, t + 0.15, 40, () => audio.tick())
+      t += 0.15 + len / 40 + 0.35
+    })
+    tl.from(
+      ficha.querySelector('.ficha-veredicto'),
+      {
+        opacity: 0,
+        scale: 1.35,
+        duration: 0.32,
+        ease: 'power4.in',
+        onComplete: () => {
+          audio.thud(0.8)
+          ctx.shake(ficha, 6)
+          ctx.haptic(18)
         },
-        '+=0.6',
-      )
-      const remate = el.querySelector<HTMLElement>('.p0-remate')!
-      t.add(() => {
-        remate.hidden = false
-      }, '+=0.4')
-        .from(remate, { opacity: 0, y: 6, duration: 0.6 })
-        .add(() => reveal(next), '+=0.3')
-    })
-    ctx.on(next, 'click', () => {
-      audio.key()
-      ctx.next('burn')
-    })
+      },
+      t + 0.2,
+    ).to(remate, { opacity: 1, duration: 0.6 }, t + 0.9)
   },
 }

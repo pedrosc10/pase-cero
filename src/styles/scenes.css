@@ -1504,3 +1504,233 @@ html.reduced .scene-revelacion.respira .rn-brillo {
   .lv-texto { font-size: 60px; }
   .btn { min-height: 46px; }
 }
+
+/* ───────────── Secuencia automática ───────────── */
+#historias {
+  position: absolute;
+  z-index: 8;
+  top: calc(env(safe-area-inset-top, 0px) + 10px);
+  left: 14px;
+  right: 62px;
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.6s;
+  pointer-events: none;
+}
+
+#historias.on {
+  opacity: 1;
+}
+
+#historias span {
+  position: relative;
+  flex: 1;
+  height: 2px;
+  background: rgba(239, 230, 214, 0.18);
+  overflow: hidden;
+}
+
+#historias i {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, var(--ascua-deep), var(--ascua-hot));
+  transform-origin: 0 50%;
+  transform: scaleX(0);
+}
+
+body.modo-oro #historias i {
+  background: linear-gradient(90deg, var(--oro-sombra), var(--oro-claro));
+}
+
+#pausa {
+  position: absolute;
+  z-index: 9;
+  left: 50%;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 30px);
+  transform: translate(-50%, 10px);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: rgba(11, 9, 7, 0.82);
+  border: 1px solid rgba(239, 230, 214, 0.25);
+  font-family: var(--sc);
+  font-size: 14px;
+  letter-spacing: 0.16em;
+  color: var(--hueso-2);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s, transform 0.25s;
+}
+
+body.pausado #pausa {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.pausa-icono {
+  display: flex;
+  gap: 4px;
+}
+
+.pausa-icono i {
+  width: 3px;
+  height: 13px;
+  background: var(--ascua-hot);
+}
+
+body.pausado #historias {
+  opacity: 0.5;
+}
+
+/* Telón de humo (transición) */
+#telon-humo {
+  position: absolute;
+  z-index: 5;
+  top: -20%;
+  bottom: -20%;
+  left: -40%;
+  width: 180%;
+  pointer-events: none;
+  visibility: hidden;
+  background: radial-gradient(60% 50% at 50% 50%, rgba(46, 40, 35, 1) 30%, rgba(46, 40, 35, 0.85) 52%, rgba(40, 34, 30, 0) 72%);
+}
+
+#telon-humo i {
+  position: absolute;
+  width: 55%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(120, 110, 100, 0.55), rgba(70, 62, 55, 0.3) 45%, transparent 70%);
+}
+
+#telon-humo i:nth-child(1) { left: 10%; top: 5%; }
+#telon-humo i:nth-child(2) { left: 30%; top: 40%; width: 70%; }
+#telon-humo i:nth-child(3) { left: 50%; top: 0%; }
+#telon-humo i:nth-child(4) { left: 20%; top: 62%; }
+#telon-humo i:nth-child(5) { left: 60%; top: 50%; }
+#telon-humo i:nth-child(6) { left: -5%; top: 30%; }
+#telon-humo i:nth-child(7) { left: 75%; top: 20%; }
+
+/* Chamuscado desde la esquina (transición) */
+#chamusco {
+  position: absolute;
+  z-index: 5;
+  width: 320vmax;
+  height: 320vmax;
+  right: -160vmax;
+  bottom: -160vmax;
+  pointer-events: none;
+  opacity: 0;
+  transform: scale(0);
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--carbon) 0 60%, #1d0b04 63%, #6a2608 65.5%, rgba(255, 140, 40, 0.95) 67.5%, rgba(255, 200, 120, 0.5) 68.6%, rgba(120, 80, 40, 0.15) 70%, transparent 71%);
+}
+
+/* Letras que arden (transición) */
+.scene.arde h1,
+.scene.arde p,
+.scene.arde .nom,
+.scene.arde .pase-num {
+  color: var(--ascua-hot) !important;
+  -webkit-text-stroke-color: var(--ascua-hot);
+  text-shadow: 0 0 14px rgba(255, 122, 26, 0.9), 0 -6px 20px rgba(255, 90, 10, 0.5);
+  transition: color 0.15s, text-shadow 0.15s;
+}
+
+/* Frente dorado (tras El Jardín) */
+#curtain.oro::before {
+  background: linear-gradient(to top, var(--carbon) 0%, #2a1c08 30%, var(--oro-sombra) 55%, var(--oro-claro) 82%, rgba(255, 246, 214, 0) 100%);
+}
+
+#curtain.oro::after {
+  background: linear-gradient(to bottom, var(--carbon) 0%, #2a1c08 30%, var(--oro-sombra) 55%, var(--oro-claro) 82%, rgba(255, 246, 214, 0) 100%);
+}
+
+/* Pases automáticos: ajustes */
+.scene-pase1 .rascar {
+  margin-top: clamp(10px, 2.4cqh, 22px);
+}
+
+.contador .dig b {
+  font-variant-numeric: tabular-nums;
+}
+
+.scene-pase3 .p3-msg {
+  text-align: left;
+  min-height: 2.6em;
+}
+
+.p3-pie {
+  margin-top: auto;
+}
+
+.p3-acierto .p3-ok {
+  margin: 0;
+}
+
+.p4-pie {
+  text-align: center;
+}
+
+.p4-ok {
+  margin: 0 0 4px;
+}
+
+/* Revelación: placa de ceniza (interacción 2) */
+.rev-placa {
+  position: relative;
+  width: 100%;
+  padding: 18px 8px 16px;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.rev-oculto {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.rev-cv {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  cursor: crosshair;
+  border: 1px solid rgba(239, 230, 214, 0.12);
+}
+
+.rev-instr {
+  margin: 18px 0 0;
+  font-size: 17px;
+  color: var(--ascua-hot);
+}
+
+.rev-instr.late {
+  animation: latido-txt 1.6s ease-in-out infinite;
+}
+
+@keyframes latido-txt {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+.rev-ayuda {
+  margin-top: 6px;
+}
+
+.scene-revelacion {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 40px);
+}

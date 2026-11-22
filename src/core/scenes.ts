@@ -1,10 +1,14 @@
+/**
+ * Director de la secuencia: monta escenas, las hace avanzar solas
+ * (duraciones en config), dibuja la barra tipo stories, gestiona la
+ * pausa por toque y ejecuta las transiciones de montaje.
+ */
 import { gsap } from 'gsap'
 import type { AudioEngine } from './audio'
 import type { Fx } from '../fx/fx'
+import type { Transicion } from '../config'
 import { haptic, shake } from './feel'
 import { store } from './storage'
-
-export type Transition = 'burn' | 'cut' | 'fade'
 
 export interface Ctx {
   el: HTMLElement
@@ -12,8 +16,9 @@ export interface Ctx {
   audio: AudioEngine
   fx: Fx
   reduced: boolean
-  next(t?: Transition): void
-  goto(id: string, t?: Transition): void
+  next(): void
+  goto(id: string): void
+  /** Temporizador pausable (sigue a la pausa global). */
   after(ms: number, fn: () => void): void
   on<K extends keyof HTMLElementEventMap>(t: EventTarget, ev: K | string, fn: (e: HTMLElementEventMap[K]) => void, opts?: AddEventListenerOptions): void
   tl(vars?: gsap.TimelineVars): gsap.core.Timeline
@@ -21,17 +26,25 @@ export interface Ctx {
   flash(amount?: number, dur?: number): void
   shake(el: Element | null, s?: number): void
   haptic(ms?: number | number[]): void
-  /** Posición de un elemento en coordenadas del escenario. */
   rectOf(el: Element): DOMRect
+  /** Permite o bloquea la pausa por toque en esta escena. */
+  setPausable(v: boolean): void
+  /** Completa el segmento de la barra (escenas sin duración fija). */
+  completeSegment(): void
 }
 
 export interface Scene {
   id: string
-  /** Índice de pase para la barra superior (0..4). */
-  nav?: number
+  /** Segundos que dura (auto-avance). Sin valor = la escena decide cuándo seguir. */
+  duration?: () => number
+  /** Aparece en la barra de progreso. */
+  progress?: boolean
+  /** Se puede pausar tocando la pantalla. */
+  pausable?: boolean
   scroll?: boolean
-  /** No guardar como punto de reanudación. */
   noSave?: boolean
+  /** Transición de salida. */
+  out?: () => Transicion
   mount(ctx: Ctx): void
 }
 
@@ -40,6 +53,12 @@ export class Director {
   private disposers: (() => void)[] = []
   private busy = false
   private current: HTMLElement | null = null
+  private autoCall: gsap.core.Tween | null = null
+  private bar: HTMLElement
+  private segs: HTMLElement[] = []
+  private paused = false
+  private pausable = false
+  private pauseEl: HTMLElement
 
   constructor(
     private scenes: Scene[],
@@ -47,24 +66,73 @@ export class Director {
     private stage: HTMLElement,
     private curtain: HTMLElement,
     private flashEl: HTMLElement,
-    private nav: HTMLElement,
     private audio: AudioEngine,
     private fx: Fx,
     private reduced: boolean,
-  ) {}
+    pauseText: string,
+  ) {
+    // barra tipo stories
+    this.bar = document.createElement('div')
+    this.bar.id = 'historias'
+    this.bar.setAttribute('aria-hidden', 'true')
+    for (const s of scenes) {
+      if (!s.progress) continue
+      const seg = document.createElement('span')
+      seg.dataset.id = s.id
+      seg.innerHTML = '<i></i>'
+      this.bar.append(seg)
+      this.segs.push(seg)
+    }
+    stage.append(this.bar)
+    // indicador de pausa
+    this.pauseEl = document.createElement('div')
+    this.pauseEl.id = 'pausa'
+    this.pauseEl.setAttribute('role', 'status')
+    this.pauseEl.innerHTML = `<span class="pausa-icono" aria-hidden="true"><i></i><i></i></span><span class="pausa-txt">${pauseText}</span>`
+    stage.append(this.pauseEl)
+    // toque = pausa / reanudar (nunca hace falta para avanzar)
+    stage.addEventListener('click', (e) => {
+      const t = e.target as HTMLElement
+      if (t.closest('button, a, #mute, [data-no-pausa]')) return
+      if (!this.pausable && !this.paused) return
+      this.togglePause()
+    })
+    document.addEventListener('keydown', (e) => {
+      if (e.key === ' ' && (this.pausable || this.paused) && !(e.target as HTMLElement).closest('button')) {
+        e.preventDefault()
+        this.togglePause()
+      }
+    })
+    document.addEventListener('visibilitychange', () => {
+      // si se cierra/oculta la pestaña, pausamos para no perder el hilo
+      if (document.hidden && this.pausable && !this.paused) this.togglePause()
+    })
+  }
 
   indexOf(id: string) {
     return this.scenes.findIndex((s) => s.id === id)
   }
 
-  get savedIndex() {
-    const id = store.get('escena')
-    const i = id ? this.indexOf(id) : -1
-    return i
+  get isPaused() {
+    return this.paused
+  }
+
+  togglePause() {
+    this.paused = !this.paused
+    document.body.classList.toggle('pausado', this.paused)
+    if (this.paused) {
+      gsap.globalTimeline.pause()
+      this.audio.suspend()
+      this.fx.freeze(true)
+    } else {
+      gsap.globalTimeline.resume()
+      this.audio.resume()
+      this.fx.freeze(false)
+    }
   }
 
   start(id = this.scenes[0].id) {
-    this.show(this.indexOf(id), 'cut')
+    this.show(this.indexOf(id))
   }
 
   private makeCtx(el: HTMLElement): Ctx {
@@ -75,11 +143,11 @@ export class Director {
       audio: this.audio,
       fx: this.fx,
       reduced: this.reduced,
-      next: (t) => this.show(this.i + 1, t),
-      goto: (id, t) => this.show(this.indexOf(id), t),
+      next: () => this.show(this.i + 1),
+      goto: (id) => this.show(this.indexOf(id)),
       after: (ms, fn) => {
-        const id = window.setTimeout(fn, ms)
-        d.push(() => clearTimeout(id))
+        const c = gsap.delayedCall(ms / 1000, fn)
+        d.push(() => c.kill())
       },
       on: (t, ev, fn, opts) => {
         t.addEventListener(ev, fn as EventListener, opts)
@@ -102,10 +170,16 @@ export class Director {
         const s = this.stage.getBoundingClientRect()
         return new DOMRect(r.left - s.left, r.top - s.top, r.width, r.height)
       },
+      setPausable: (v) => {
+        this.pausable = v
+      },
+      completeSegment: () => this.completeSegment(this.scenes[this.i].id),
     }
   }
 
   private teardown() {
+    this.autoCall?.kill()
+    this.autoCall = null
     while (this.disposers.length) {
       try {
         this.disposers.pop()!()
@@ -121,42 +195,51 @@ export class Director {
     this.i = i
     const el = document.createElement('section')
     el.className = `scene scene-${s.id}${s.scroll ? ' scroll' : ''}`
-    el.setAttribute('aria-live', 'polite')
     el.dataset.scene = s.id
     this.current?.remove()
     this.host.append(el)
     this.current = el
     document.body.dataset.scene = s.id
     if (!s.noSave) store.set('escena', s.id)
-    this.updateNav(s)
+    this.pausable = !!s.pausable
+    this.updateBar(s)
     s.mount(this.makeCtx(el))
-    // foco para lectores de pantalla
-    // (solo con teclado/ratón: en móvil no queremos anillos de foco)
-    if (window.matchMedia?.('(pointer: fine)').matches) {
-      el.querySelector<HTMLElement>('[data-autofocus]')?.focus({ preventScroll: true })
+    if (s.duration) {
+      const dur = s.duration()
+      this.autoCall = gsap.delayedCall(dur, () => this.show(this.i + 1))
+      const seg = this.segs.find((x) => x.dataset.id === s.id)
+      if (seg) {
+        const tw = gsap.fromTo(seg.querySelector('i'), { scaleX: 0 }, { scaleX: 1, duration: dur, ease: 'none' })
+        this.disposers.push(() => tw.kill())
+      }
     }
   }
 
-  private updateNav(s: Scene) {
-    const spans = this.nav.querySelectorAll('span')
-    if (s.nav === undefined) {
-      this.nav.classList.remove('on')
-      return
-    }
-    this.nav.classList.add('on')
-    spans.forEach((sp, k) => {
-      sp.classList.toggle('hecho', k < s.nav!)
-      sp.classList.toggle('ahora', k === s.nav)
+  private updateBar(s: Scene) {
+    const idx = this.segs.findIndex((x) => x.dataset.id === s.id)
+    this.bar.classList.toggle('on', idx >= 0 || (s.id === 'revelacion'))
+    this.segs.forEach((seg, k) => {
+      const fill = seg.querySelector('i')!
+      gsap.set(fill, { scaleX: k < idx ? 1 : 0 })
     })
+    if (s.id === 'vale') this.bar.classList.remove('on')
   }
 
-  show(i: number, t: Transition = 'burn') {
+  /** Marca el segmento actual como completo (escenas sin duración fija). */
+  completeSegment(id: string) {
+    const seg = this.segs.find((x) => x.dataset.id === id)
+    if (seg) gsap.to(seg.querySelector('i'), { scaleX: 1, duration: 0.6 })
+  }
+
+  show(i: number) {
     if (i < 0 || i >= this.scenes.length || this.busy) return
-    if (this.reduced && t !== 'cut') t = 'fade'
+    if (this.paused) this.togglePause()
     if (!this.current) {
       this.mount(i)
       return
     }
+    const prev = this.scenes[this.i]
+    let t: Transicion = prev?.out?.() ?? 'quemar'
     this.busy = true
     this.host.style.pointerEvents = 'none'
     const done = () => {
@@ -164,35 +247,153 @@ export class Director {
       this.host.style.pointerEvents = ''
     }
     const old = this.current
-    if (t === 'fade') {
+    const swap = () => this.mount(i)
+    if (this.reduced) {
       gsap.to(old, {
         opacity: 0,
-        duration: 0.35,
+        duration: 0.4,
         onComplete: () => {
-          this.mount(i)
-          gsap.fromTo(this.current, { opacity: 0 }, { opacity: 1, duration: 0.45, onComplete: done })
+          swap()
+          gsap.fromTo(this.current, { opacity: 0 }, { opacity: 1, duration: 0.5, onComplete: done })
         },
       })
       return
     }
-    if (t === 'cut') {
-      gsap.to(old, {
-        opacity: 0,
-        duration: 0.12,
-        onComplete: () => {
-          this.mount(i)
-          gsap.fromTo(this.current, { opacity: 0 }, { opacity: 1, duration: 0.18, delay: 0.16, onComplete: done })
-        },
-      })
-      return
-    }
-    // burn: frente de ascuas que sube, tapa, y sigue subiendo
-    this.audio.whoosh(true)
+    if (t === 'letras' && !old.querySelector('h1, p, .nom')) t = 'corte'
+    TRANSICIONES[t]({ old, swap, done, director: this })
+  }
+
+  // utilidades para las transiciones
+  get el() {
+    return { stage: this.stage, curtain: this.curtain, flash: this.flashEl, host: this.host }
+  }
+  get fxRef() {
+    return this.fx
+  }
+  get audioRef() {
+    return this.audio
+  }
+  get currentEl() {
+    return this.current
+  }
+}
+
+// ───────────────────────── Transiciones de montaje ─────────────────────────
+interface TArgs {
+  old: HTMLElement
+  swap: () => void
+  done: () => void
+  director: Director
+}
+
+let humoTelon: HTMLElement | null = null
+let agujero: HTMLElement | null = null
+
+const TRANSICIONES: Record<Transicion, (a: TArgs) => void> = {
+  /** Frente de ascuas que sube, tapa y sigue subiendo. */
+  quemar({ old, swap, done, director }) {
+    const { curtain } = director.el
+    curtain.classList.remove('oro')
+    director.audioRef.whoosh(true)
     gsap
       .timeline({ onComplete: done })
-      .to(old, { y: -26, opacity: 0.0, duration: 0.5, ease: 'power2.in' }, 0)
-      .fromTo(this.curtain, { yPercent: 110 }, { yPercent: 0, duration: 0.5, ease: 'power3.in' }, 0)
-      .add(() => this.mount(i))
-      .to(this.curtain, { yPercent: -112, duration: 0.6, ease: 'power3.out' })
-  }
+      .to(old, { y: -26, opacity: 0, duration: 0.5, ease: 'power2.in' }, 0)
+      .fromTo(curtain, { yPercent: 110 }, { yPercent: 0, duration: 0.5, ease: 'power3.in' }, 0)
+      .add(swap)
+      .to(curtain, { yPercent: -112, duration: 0.6, ease: 'power3.out' })
+  },
+
+  /** Igual, pero el frente es hilo dorado (tras El Jardín). */
+  oro({ old, swap, done, director }) {
+    const { curtain } = director.el
+    curtain.classList.add('oro')
+    director.audioRef.whoosh(true)
+    gsap
+      .timeline({ onComplete: () => (curtain.classList.remove('oro'), done()) })
+      .to(old, { opacity: 0, duration: 0.7, ease: 'power2.in' }, 0)
+      .fromTo(curtain, { yPercent: 110 }, { yPercent: 0, duration: 0.7, ease: 'power2.inOut' }, 0)
+      .add(swap)
+      .to(curtain, { yPercent: -112, duration: 0.8, ease: 'power2.out' })
+  },
+
+  /** Corte seco al golpe de sonido. */
+  corte({ old, swap, done, director }) {
+    const { flash } = director.el
+    director.audioRef.thud(0.9)
+    gsap
+      .timeline({ onComplete: done })
+      .set(old, { opacity: 0 })
+      .add(swap, 0.14)
+      .fromTo(flash, { opacity: 0.35 }, { opacity: 0, duration: 0.5 }, 0.14)
+      .add(() => {
+        gsap.fromTo(director.currentEl, { scale: 1.06 }, { scale: 1, duration: 0.7, ease: 'expo.out', clearProps: 'transform' })
+      }, 0.15)
+  },
+
+  /** Una cortina de humo barre la pantalla. */
+  humo({ old, swap, done, director }) {
+    const { stage } = director.el
+    if (!humoTelon) {
+      humoTelon = document.createElement('div')
+      humoTelon.id = 'telon-humo'
+      humoTelon.setAttribute('aria-hidden', 'true')
+      humoTelon.innerHTML = '<i></i><i></i><i></i><i></i><i></i><i></i><i></i>'
+      stage.append(humoTelon)
+      gsap.set(humoTelon, { x: 0, xPercent: -130 })
+    }
+    director.audioRef.whoosh(false)
+    director.fxRef.setSmoke(0.6)
+    gsap
+      .timeline({ onComplete: done })
+      .set(humoTelon, { visibility: 'visible' }, 0)
+      .fromTo(humoTelon, { xPercent: -130 }, { xPercent: 0, duration: 0.9, ease: 'power2.in' }, 0)
+      .to(old, { opacity: 0, x: 30, duration: 0.6, ease: 'power2.in' }, 0.2)
+      .add(swap, 0.9)
+      .to(humoTelon, { xPercent: 130, duration: 1.1, ease: 'power2.out' }, 0.95)
+      .set(humoTelon, { visibility: 'hidden' })
+      .add(() => director.fxRef.setSmoke(0), 1.6)
+  },
+
+  /** La pantalla se chamusca desde una esquina como la carta. */
+  chamuscar({ old, swap, done, director }) {
+    const { stage } = director.el
+    if (!agujero) {
+      agujero = document.createElement('div')
+      agujero.id = 'chamusco'
+      agujero.setAttribute('aria-hidden', 'true')
+      stage.append(agujero)
+    }
+    director.audioRef.ignite()
+    gsap
+      .timeline({ onComplete: done })
+      .set(agujero, { opacity: 1 })
+      .fromTo(agujero, { scale: 0 }, { scale: 1, duration: 1.3, ease: 'power2.in' }, 0)
+      .to(old, { opacity: 0, duration: 0.25 }, 1.05)
+      .add(swap, 1.3)
+      .to(agujero, { opacity: 0, duration: 0.6, ease: 'power1.out' }, 1.35)
+  },
+
+  /** Las letras arden y se van en chispas. */
+  letras({ old, swap, done, director }) {
+    const fx = director.fxRef
+    const st = director.el.stage.getBoundingClientRect()
+    const items = Array.from(old.querySelectorAll<HTMLElement>('h1, p, .nom, .et, .estado, .pase-num')).filter(
+      (e) => e.offsetParent && e.getBoundingClientRect().height > 0,
+    )
+    director.audioRef.ignite()
+    old.classList.add('arde')
+    const tl = gsap.timeline({ onComplete: done })
+    items.forEach((e, k) => {
+      tl.add(() => {
+        const r = e.getBoundingClientRect()
+        fx.burst(r.left - st.left + r.width / 2, r.top - st.top + r.height / 2, 10, 0.6)
+      }, k * 0.06)
+      tl.to(e, { opacity: 0, y: -18, duration: 0.55, ease: 'power2.in' }, k * 0.06)
+    })
+    tl.to(old, { opacity: 0, duration: 0.3 }, '-=0.2')
+      .add(swap)
+      .add(() => {
+        gsap.fromTo(director.currentEl, { opacity: 0 }, { opacity: 1, duration: 0.4 })
+      })
+  },
 }

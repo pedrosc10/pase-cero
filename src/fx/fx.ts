@@ -131,7 +131,7 @@ export class Fx {
       const dt = Math.max(0, Math.min(0.05, (t - this.last) / 1000))
       this.last = t
       this.adapt(dt)
-      this.step(dt)
+      if (!this.frozen) this.step(dt)
       this.draw()
       this.raf = requestAnimationFrame(loop)
     }
@@ -152,6 +152,12 @@ export class Fx {
       this.maxEmbers = Math.round(this.maxEmbers * 0.55)
       this.resize()
     }
+  }
+
+  private frozen = false
+  /** Congela la animación (pausa por toque). */
+  freeze(v: boolean) {
+    this.frozen = v
   }
 
   /** Intensidad del fuego de fondo 0..1. */

@@ -347,7 +347,11 @@ export class AudioEngine {
   }
 
   /** Redoble de caja en crescendo. Devuelve función para pararlo. */
-  drumroll(seconds = 6): void {
+  /**
+   * Redoble de caja: crescendo durante 6 s y luego sostenido hasta stopRoll().
+   * Planificador con anticipación (no crea cientos de nodos de golpe).
+   */
+  drumroll(): void {
     if (!this.ok()) return
     this.rollStop?.()
     const c = this.ctx!
@@ -355,15 +359,20 @@ export class AudioEngine {
     const bus = c.createGain()
     bus.connect(this.comp)
     let t = t0
-    const end = t0 + seconds
-    while (t < end) {
-      const p = (t - t0) / seconds
-      const gain = 0.05 + p * p * 0.4
-      this.noise(t, 0.05, { type: 'bandpass', f: 1900 + Math.random() * 400, q: 0.7, gain, attack: 0.001, wet: 0, dest: bus })
-      this.tone(t, 0.04, { type: 'triangle', f: 190, f2: 150, gain: gain * 0.4, wet: 0, dest: bus })
-      t += 0.055 - p * 0.012 + Math.random() * 0.006
+    const schedule = () => {
+      const horizon = c.currentTime + 0.3
+      while (t < horizon) {
+        const p = Math.min(1, (t - t0) / 6)
+        const gain = 0.05 + p * p * 0.33
+        this.noise(t, 0.05, { type: 'bandpass', f: 1900 + Math.random() * 400, q: 0.7, gain, attack: 0.001, wet: 0, dest: bus })
+        this.tone(t, 0.04, { type: 'triangle', f: 190, f2: 150, gain: gain * 0.4, wet: 0, dest: bus })
+        t += 0.055 - p * 0.012 + Math.random() * 0.006
+      }
     }
+    schedule()
+    const timer = window.setInterval(schedule, 100)
     this.rollStop = () => {
+      clearInterval(timer)
       const n = c.currentTime
       bus.gain.cancelScheduledValues(n)
       bus.gain.setValueAtTime(bus.gain.value, n)
@@ -429,6 +438,23 @@ export class AudioEngine {
       this.noise(t0 + t, 0.03, { type: 'bandpass', f: 3200, q: 3, gain: 0.07, attack: 0.002, wet: 0.02 })
     }
     this.tone(t0, seconds, { type: 'square', f: 70, gain: 0.02, attack: 0.05, wet: 0 })
+  }
+
+  /** Pausa/reanuda todo el sonido (pausa por toque). */
+  suspend() {
+    try {
+      void this.ctx?.suspend()
+    } catch {
+      /* nada */
+    }
+  }
+
+  resume() {
+    try {
+      void this.ctx?.resume()
+    } catch {
+      /* nada */
+    }
   }
 
   stopRoll() {

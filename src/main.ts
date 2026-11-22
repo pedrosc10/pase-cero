@@ -32,7 +32,6 @@ app.innerHTML = `
     <div id="curtain" aria-hidden="true"></div>
     <div id="grain" aria-hidden="true"></div>
     <div id="flash" aria-hidden="true"></div>
-    <nav id="nav" aria-label="Pases">${config.sala.carta.pases.map((p) => `<span>${p.num}</span>`).join('')}</nav>
     <button id="mute" type="button" aria-label="Silenciar sonido" aria-pressed="false">
       <svg class="on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4.2 4.2 0 0 1 0 6M18 6.5a7.8 7.8 0 0 1 0 11"/></svg>
       <svg class="off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M16 9.5l5 5M21 9.5l-5 5"/></svg>
@@ -44,7 +43,8 @@ app.innerHTML = `
 const stage = document.getElementById('stage')!
 const audio = new AudioEngine()
 const fx = new Fx(document.getElementById('fx') as HTMLCanvasElement, reduced)
-fx.start()
+// el canvas arranca tras la primera pintura
+requestAnimationFrame(() => setTimeout(() => fx.start(), 120))
 
 const curtain = document.getElementById('curtain')!
 gsap.set(curtain, { y: 0, yPercent: 110 })
@@ -94,10 +94,10 @@ const director = new Director(
   stage,
   curtain,
   document.getElementById('flash')!,
-  document.getElementById('nav')!,
   audio,
   fx,
   reduced,
+  config.pausa.texto,
 )
 
 director.start()
