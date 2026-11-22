@@ -1,7 +1,6 @@
 import { gsap } from 'gsap'
 import { config } from '../config'
 import { isIOS } from '../core/dom'
-import { emblemaFill, loadEmblema } from '../core/emblema'
 import { hold } from '../core/hold'
 import { session } from '../core/session'
 import { store } from '../core/storage'
@@ -49,11 +48,16 @@ export const entrada: Scene = {
     if (config.emblemaEnEntrada) {
       const huella = el.querySelector<HTMLElement>('.ent-huella')!
       // diferido: no compite con la primera pintura ni con el gesto inicial
-      ctx.after(1600, () => {
-        void loadEmblema().then((d) => {
-          huella.innerHTML = emblemaFill(d)
+      ctx.after(1200, () => {
+        // imagen ligera (se decodifica fuera del hilo principal)
+        const img = new Image()
+        img.decoding = 'async'
+        img.alt = ''
+        img.src = import.meta.env.BASE_URL + 'emblema.webp'
+        img.onload = () => {
+          huella.append(img)
           requestAnimationFrame(() => huella.classList.add('on'))
-        })
+        }
       })
     }
     const ring = el.querySelector<HTMLButtonElement>('.ent-anillo')!

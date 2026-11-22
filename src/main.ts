@@ -16,7 +16,7 @@ import { AudioEngine } from './core/audio'
 import { Director } from './core/scenes'
 import { prefersReduced } from './core/dom'
 import { Fx } from './fx/fx'
-import { scenes } from './scenes'
+import { cargarResto, scenes } from './scenes'
 
 document.title = config.meta.tituloPestana
 const reduced = prefersReduced()
@@ -44,7 +44,26 @@ const stage = document.getElementById('stage')!
 const audio = new AudioEngine()
 const fx = new Fx(document.getElementById('fx') as HTMLCanvasElement, reduced)
 // el canvas arranca tras la primera pintura
-requestAnimationFrame(() => setTimeout(() => fx.start(), 120))
+requestAnimationFrame(() => setTimeout(() => fx.start(), 450))
+
+// grano de película: textura de ruido pequeña generada una vez (barata)
+setTimeout(() => {
+  try {
+    const n = document.createElement('canvas')
+    n.width = n.height = 160
+    const g = n.getContext('2d')!
+    const img = g.createImageData(160, 160)
+    for (let k = 0; k < img.data.length; k += 4) {
+      const v = Math.random() * 255
+      img.data[k] = img.data[k + 1] = img.data[k + 2] = v
+      img.data[k + 3] = 255
+    }
+    g.putImageData(img, 0, 0)
+    document.documentElement.style.setProperty('--grano', `url(${n.toDataURL()})`)
+  } catch {
+    /* sin grano */
+  }
+}, 300)
 
 const curtain = document.getElementById('curtain')!
 gsap.set(curtain, { y: 0, yPercent: 110 })
@@ -101,3 +120,5 @@ const director = new Director(
 )
 
 director.start()
+// el resto de escenas se descarga mientras Antonio enciende las brasas
+director.extend(new Promise((r) => setTimeout(r, 200)).then(cargarResto))

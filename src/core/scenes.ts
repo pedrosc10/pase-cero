@@ -59,6 +59,7 @@ export class Director {
   private paused = false
   private pausable = false
   private pauseEl: HTMLElement
+  private pending: Promise<void> = Promise.resolve()
 
   constructor(
     private scenes: Scene[],
@@ -109,6 +110,21 @@ export class Director {
     })
   }
 
+  /** Añade escenas que llegan en diferido (code-splitting). */
+  extend(p: Promise<Scene[]>) {
+    this.pending = p.then((list) => {
+      this.scenes.push(...list)
+      for (const s of list) {
+        if (!s.progress) continue
+        const seg = document.createElement('span')
+        seg.dataset.id = s.id
+        seg.innerHTML = '<i></i>'
+        this.bar.append(seg)
+        this.segs.push(seg)
+      }
+    })
+  }
+
   indexOf(id: string) {
     return this.scenes.findIndex((s) => s.id === id)
   }
@@ -143,8 +159,8 @@ export class Director {
       audio: this.audio,
       fx: this.fx,
       reduced: this.reduced,
-      next: () => this.show(this.i + 1),
-      goto: (id) => this.show(this.indexOf(id)),
+      next: () => void this.pending.then(() => this.show(this.i + 1)),
+      goto: (id) => void this.pending.then(() => this.show(this.indexOf(id))),
       after: (ms, fn) => {
         const c = gsap.delayedCall(ms / 1000, fn)
         d.push(() => c.kill())
