@@ -20,7 +20,7 @@ export const carrera: Scene = {
     fx.setFire(0.35)
     fx.setSmoke(0)
     audio.fire(0.2)
-    // estilos alternos: la voz de "alta cocina" contra la de "venta"
+    // estilos alternos: la voz de "alta cocina" contra la de "brasa de carretera"
     const estilos = ['cr-serif', 'cr-grot', 'cr-grot cr-ascua']
     el.innerHTML = `
       <p class="kicker cr-k">${md(c.antetitulo)}</p>
